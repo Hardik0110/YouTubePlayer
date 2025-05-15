@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'VT323', monospace;
+  @apply bg-background text-textColor;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-secondary bg-opacity-30;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary border-2 border-secondary;
+  border-radius: 6px;
+}
+
+/* Range input styling */
+input[type=range] {
+  height: 22px;
+  -webkit-appearance: none;
+  margin: 10px 0;
+  background: transparent;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  @apply bg-secondary;
+  height: 10px;
+  border-radius: 5px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  @apply bg-accent border-2 border-textColor;
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  margin-top: -5px;
+  -webkit-appearance: none;
+}
+
+/* Pixelated image effect */
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* Pixel art border */
+.pixel-art-border {
+  position: relative;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.pixel-art-border::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: repeating-linear-gradient(
+    45deg,
+    #FFE66D,
+    #FFE66D 5px,
+    #FF6B6B 5px,
+    #FF6B6B 10px
+  );
+  z-index: -1;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
