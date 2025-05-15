@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import VideoList from './components/VideoList';
-import NowPlaying from './components/NowPlaying';
+import NowPlaying, { VideoPlayerRef } from './components/NowPlaying';
 import Player from './components/Player';
 import { searchVideos, getTrendingVideos } from './services/youtubeApi';
 import { VideoItem } from './types';
+import { YouTubeEvent } from 'react-youtube';
 
 function App() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
@@ -12,6 +13,8 @@ function App() {
   const [queue, setQueue] = useState<VideoItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const videoPlayerRef = useRef<VideoPlayerRef>(null);
 
   //trending videos
   useEffect(() => {
@@ -46,7 +49,6 @@ function App() {
   const selectVideo = (video: VideoItem) => {
     setCurrentVideo(video);
     
-    
     const newQueue = videos.filter(v => v.id !== video.id);
     setQueue(newQueue);
   };
@@ -60,7 +62,6 @@ function App() {
   };
 
   const playPrevVideo = () => {
-    
     if (videos.length > 0 && currentVideo) {
       const currentIndex = videos.findIndex(v => v.id === currentVideo.id);
       if (currentIndex > 0) {
@@ -68,6 +69,17 @@ function App() {
         setCurrentVideo(videos[prevIndex]);
         setQueue(videos.filter((_, i) => i !== prevIndex && i !== currentIndex));
       }
+    }
+  };
+
+  const handlePlayerReady = (event: YouTubeEvent) => {
+    // Player is ready
+  };
+
+  const handlePlayerStateChange = (event: YouTubeEvent) => {
+    // Handle player state changes
+    if (event.data === 0) { // Video ended
+      playNextVideo();
     }
   };
 
@@ -89,7 +101,12 @@ function App() {
         
         {/* Now playing section */}
         <div className="w-full md:w-3/5 lg:w-2/3 overflow-y-auto">
-          <NowPlaying currentVideo={currentVideo} />
+          <NowPlaying 
+            ref={videoPlayerRef}
+            currentVideo={currentVideo} 
+            onPlayerReady={handlePlayerReady}
+            onPlayerStateChange={handlePlayerStateChange}
+          />
         </div>
       </main>
       
@@ -100,6 +117,7 @@ function App() {
           queue={queue}
           onNextVideo={playNextVideo}
           onPrevVideo={playPrevVideo}
+          videoPlayerRef={videoPlayerRef}
         />
       </div>
     </div>

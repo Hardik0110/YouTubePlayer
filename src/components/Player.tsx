@@ -4,19 +4,23 @@ import {
   Music 
 } from 'lucide-react';
 import { VideoItem } from '../types';
+import { VideoPlayerRef } from './NowPlaying';
+import { YouTubeEvent } from 'react-youtube';
 
 interface PlayerProps {
   currentVideo: VideoItem | null;
   queue: VideoItem[];
   onNextVideo: () => void;
   onPrevVideo: () => void;
+  videoPlayerRef: React.RefObject<VideoPlayerRef>;
 }
 
 const Player: React.FC<PlayerProps> = ({ 
   currentVideo, 
   queue, 
   onNextVideo, 
-  onPrevVideo 
+  onPrevVideo,
+  videoPlayerRef
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -24,7 +28,6 @@ const Player: React.FC<PlayerProps> = ({
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
 
-  const playerRef = useRef<any>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,19 +45,19 @@ const Player: React.FC<PlayerProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handlePlayerReady = (event: any) => {
-    playerRef.current = event.target;
-    setDuration(event.target.getDuration());
-    event.target.setVolume(volume);
+  const handlePlayerReady = (event: YouTubeEvent) => {
+    const player = event.target;
+    setDuration(player.getDuration());
+    player.setVolume(volume);
     
     // Auto-play when ready
     setTimeout(() => {
       setIsPlaying(true);
-      event.target.playVideo();
+      player.playVideo();
     }, 500);
   };
 
-  const handlePlayerStateChange = (event: any) => {
+  const handlePlayerStateChange = (event: YouTubeEvent) => {
     // YouTube player states: -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (cued)
     if (event.data === 0) {
       // Video ended, play next if available
@@ -67,65 +70,72 @@ const Player: React.FC<PlayerProps> = ({
   };
 
   const togglePlay = () => {
-    if (!playerRef.current) return;
+    const player = videoPlayerRef.current?.player;
+    if (!player) return;
     
     if (isPlaying) {
-      playerRef.current.pauseVideo();
+      player.pauseVideo();
     } else {
-      playerRef.current.playVideo();
+      player.playVideo();
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const player = videoPlayerRef.current?.player;
+    if (!player) return;
+    
     const newVolume = parseInt(e.target.value);
     setVolume(newVolume);
-    if (playerRef.current) {
-      playerRef.current.setVolume(newVolume);
-      if (newVolume === 0) {
-        setIsMuted(true);
-      } else if (isMuted) {
-        setIsMuted(false);
-      }
+    
+    player.setVolume(newVolume);
+    if (newVolume === 0) {
+      setIsMuted(true);
+      player.mute();
+    } else if (isMuted) {
+      setIsMuted(false);
+      player.unMute();
     }
   };
 
   const toggleMute = () => {
-    if (!playerRef.current) return;
+    const player = videoPlayerRef.current?.player;
+    if (!player) return;
     
     if (isMuted) {
-      playerRef.current.unMute();
-      playerRef.current.setVolume(volume === 0 ? 50 : volume);
+      player.unMute();
+      player.setVolume(volume === 0 ? 50 : volume);
       if (volume === 0) setVolume(50);
     } else {
-      playerRef.current.mute();
+      player.mute();
     }
     setIsMuted(!isMuted);
   };
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!playerRef.current || !progressBarRef.current) return;
+    const player = videoPlayerRef.current?.player;
+    if (!player || !progressBarRef.current) return;
     
     const progressBar = progressBarRef.current;
     const rect = progressBar.getBoundingClientRect();
     const clickPosition = (e.clientX - rect.left) / rect.width;
     const newTime = clickPosition * duration;
     
-    playerRef.current.seekTo(newTime);
+    player.seekTo(newTime, true);
     setCurrentTime(newTime);
   };
 
   // Update progress bar
   useEffect(() => {
-    if (!playerRef.current || !isPlaying) return;
+    const player = videoPlayerRef.current?.player;
+    if (!player || !isPlaying) return;
     
     const interval = setInterval(() => {
-      const currentTime = playerRef.current.getCurrentTime();
+      const currentTime = player.getCurrentTime();
       setCurrentTime(currentTime);
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, videoPlayerRef]);
 
   return (
     <div className="bg-primary border-t-4 border-secondary pb-safe w-full">
@@ -160,8 +170,8 @@ const Player: React.FC<PlayerProps> = ({
             <div className="flex items-center">
               <button 
                 onClick={onPrevVideo}
-                disabled={queue.length === 0}
-                className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
+                disabled={!currentVideo}
+                className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50"
               >
                 <SkipBack className="w-5 h-5" />
               </button>
@@ -176,7 +186,7 @@ const Player: React.FC<PlayerProps> = ({
               <button 
                 onClick={onNextVideo}
                 disabled={queue.length === 0}
-                className="bg-accent p-2 rounded-full transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
+                className="bg-accent p-2 rounded-full transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50"
               >
                 <SkipForward className="w-5 h-5" />
               </button>
