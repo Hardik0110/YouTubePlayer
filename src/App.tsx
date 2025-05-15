@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import VideoList from './components/VideoList';
 import NowPlaying, { VideoPlayerRef } from './components/NowPlaying';
@@ -72,8 +72,9 @@ function App() {
     }
   };
 
-  const handlePlayerReady = (event: YouTubeEvent) => {
+  const handlePlayerReady = () => {
     // Player is ready
+    // Initial settings will be applied through the ref
   };
 
   const handlePlayerStateChange = (event: YouTubeEvent) => {
@@ -100,7 +101,7 @@ function App() {
         </div>
         
         {/* Now playing section */}
-        <div className="w-full md:w-3/5 lg:w-2/3 overflow-y-auto">
+        <div className="w-full md:w-3/5 lg:w-2/3 overflow-hidden">
           <NowPlaying 
             ref={videoPlayerRef}
             currentVideo={currentVideo} 

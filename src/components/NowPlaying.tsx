@@ -1,42 +1,90 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef, RefObject } from 'react';
-import { VideoItem } from '../types';
-import YouTube, { YouTubePlayer, YouTubeEvent } from 'react-youtube';
-import { Maximize, Minimize } from 'lucide-react';
+// src/components/NowPlaying.tsx
 
-interface NowPlayingProps {
-  currentVideo: VideoItem | null;
-  onPlayerReady: (event: YouTubeEvent) => void;
-  onPlayerStateChange: (event: YouTubeEvent) => void;
-}
+import React, {
+  useImperativeHandle,
+  forwardRef,
+  Ref,
+  useRef
+} from 'react';
+import YouTube, { YouTubePlayer, YouTubeEvent } from 'react-youtube';
+import { VideoItem } from '../types';
 
 export interface VideoPlayerRef {
   player: YouTubePlayer | null;
+  isPlaying(): boolean;
+  togglePlay(): void;
+  getCurrentTime(): number;
+  getDuration(): number;
+  seekTo(seconds: number): void;
+  setVolume(volume: number): void;
+  mute(): void;
+  unMute(): void;
+  isMuted(): boolean;
 }
 
-const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
-  ({ currentVideo, onPlayerReady, onPlayerStateChange }, ref) => {
-    const [isFullscreen, setIsFullscreen] = useState(false);
+interface NowPlayingProps {
+  currentVideo: VideoItem | null;
+  onPlayerReady(event: YouTubeEvent): void;
+  onPlayerStateChange(event: YouTubeEvent): void;
+}
+
+const NowPlaying = forwardRef(
+  (
+    { currentVideo, onPlayerReady, onPlayerStateChange }: NowPlayingProps,
+    ref: Ref<VideoPlayerRef>
+  ) => {
+    
     const playerRef = useRef<YouTubePlayer | null>(null);
 
     useImperativeHandle(ref, () => ({
       get player() {
         return playerRef.current;
+      },
+      isPlaying() {
+        return playerRef.current?.getPlayerState() === 1;
+      },
+      togglePlay() {
+        const player = playerRef.current;
+        if (!player) return;
+        if (player.getPlayerState() === 1) player.pauseVideo();
+        else player.playVideo();
+      },
+      getCurrentTime() {
+        return playerRef.current?.getCurrentTime() ?? 0;
+      },
+      getDuration() {
+        return playerRef.current?.getDuration() ?? 0;
+      },
+      seekTo(seconds) {
+        playerRef.current?.seekTo(seconds, true);
+      },
+      setVolume(vol) {
+        playerRef.current?.setVolume(vol);
+      },
+      mute() {
+        playerRef.current?.mute();
+      },
+      unMute() {
+        playerRef.current?.unMute();
+      },
+      isMuted() {
+        return playerRef.current?.isMuted() ?? false;
       }
     }));
-
-    const toggleFullscreen = () => {
-      setIsFullscreen(!isFullscreen);
-    };
 
     const handleReady = (event: YouTubeEvent) => {
       playerRef.current = event.target;
       onPlayerReady(event);
     };
 
+    const handleStateChange = (event: YouTubeEvent) => {
+      onPlayerStateChange(event);
+    };
+
     if (!currentVideo) {
       return (
         <div className="flex flex-col items-center justify-center h-full p-6 bg-white bg-opacity-50 rounded-lg shadow-retro m-4">
-          <div className="w-16 h-16 border-8 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <div className="loader mb-3" />
           <p className="font-press-start text-sm text-textColor text-center">
             No track selected
           </p>
@@ -48,66 +96,40 @@ const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
     }
 
     return (
-      <div className="p-4 h-full">
-        <div className="bg-white bg-opacity-50 rounded-lg shadow-retro-lg p-4 h-full flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-press-start text-lg text-textColor">Now Playing</h2>
-            <button 
-              onClick={toggleFullscreen} 
-              className="bg-accent p-2 rounded-md transition-all hover:bg-opacity-80 shadow-retro"
-            >
-              {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-            </button>
-          </div>
-          
-          <div className="mb-4 flex-grow flex flex-col items-center justify-center">
-            <div className={`relative w-full max-w-xs mx-auto mb-6 border-4 border-primary shadow-retro-lg ${isFullscreen ? 'max-w-full h-[70vh]' : ''}`}>
-              <YouTube
-                videoId={currentVideo.id}
-                className="w-full h-full aspect-video"
-                opts={{
-                  height: '100%',
-                  width: '100%',
-                  playerVars: {
-                    autoplay: 1,
-                    controls: 0,
-                    disablekb: 1,
-                    fs: 0,
-                    modestbranding: 1,
-                    origin: window.location.origin,
-                    enablejsapi: 1
-                  }
-                }}
-                onReady={handleReady}
-                onStateChange={onPlayerStateChange}
-              />
-            </div>
-            
-            <div className="w-full">
-              <h3 className="font-vt323 text-2xl text-textColor font-bold text-center mb-2">
-                {currentVideo.title}
-              </h3>
-              <p className="font-vt323 text-lg text-gray-700 text-center mb-1">
-                {currentVideo.channelTitle}
-              </p>
-              <p className="font-vt323 text-md text-gray-500 text-center">
-                {currentVideo.viewCount}
-              </p>
-            </div>
-          </div>
-          
-          <div className="mt-auto">
-            <div className="w-full h-2 bg-secondary mb-2 relative overflow-hidden rounded-full">
-              <div className="absolute left-0 top-0 h-full w-16 bg-primary animate-pulse-slow"></div>
-            </div>
-            <div className="pixel-art-border w-full h-8 bg-secondary font-vt323 text-white flex items-center justify-center">
-              <span className="animate-pulse-slow">♪♫ RETRO MUSIC PLAYER ♫♪</span>
-            </div>
-          </div>
+      <div className="p-4 h-full flex flex-col">
+        <h2 className="font-press-start text-lg text-textColor mb-4">
+          Now Playing
+        </h2>
+        <div className="flex-grow relative w-full border-4 border-primary shadow-retro-lg rounded-lg overflow-hidden">
+          <YouTube
+            videoId={currentVideo.id}
+            className="absolute top-0 left-0 w-full h-full"
+            opts={{
+              height: '100%',
+              width: '100%',
+              playerVars: {
+                controls: 0,
+                modestbranding: 1,
+                enablejsapi: 1
+              }
+            }}
+            onReady={handleReady}
+            onStateChange={handleStateChange}
+          />
+        </div>
+        <div className="mt-4 text-center">
+          <h3 className="font-vt323 text-2xl text-textColor font-bold">
+            {currentVideo.title}
+          </h3>
+          <p className="font-vt323 text-lg text-gray-700">
+            {currentVideo.channelTitle}
+          </p>
         </div>
       </div>
     );
   }
-);
+) as React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<NowPlayingProps> & React.RefAttributes<VideoPlayerRef>
+>;
 
 export default NowPlaying;
