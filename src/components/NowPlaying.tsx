@@ -1,5 +1,3 @@
-// src/components/NowPlaying.tsx
-
 import React, {
   useImperativeHandle,
   forwardRef,

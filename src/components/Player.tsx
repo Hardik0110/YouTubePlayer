@@ -1,5 +1,3 @@
-// src/components/Player.tsx
-
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Play,
@@ -228,7 +226,7 @@ const Player: React.FC<PlayerProps> = ({
         </div>
       )}
     </div>
-  );
+  ); 
 };
 
 export default Player;
