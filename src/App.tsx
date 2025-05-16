@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import VideoList from './components/VideoList';
-import NowPlaying, { VideoPlayerRef } from './components/NowPlaying';
+import NowPlaying from './components/NowPlaying';
 import Player from './components/Player';
 import { searchVideos, getTrendingVideos } from './services/youtubeApi';
-import { VideoItem } from './types';
+import { VideoItem, VideoPlayerRef } from './types';
 import { YouTubeEvent } from 'react-youtube';
 
 function App() {

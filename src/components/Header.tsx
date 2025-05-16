@@ -16,23 +16,18 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     }
   };
 
+  const focusedBorderClass = isSearchFocused ? 'border-accent' : 'border-secondary';
+
   return (
     <header className="bg-primary px-4 py-3 shadow-retro">
       <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">
         <div className="flex items-center mb-3 sm:mb-0">
           <Music className="w-8 h-8 text-accent mr-2" />
-          <h1 className="font-press-start text-2xl text-accent"> MujiK Player</h1>
+          <h1 className="font-press-start text-2xl text-accent">MujiK Player</h1>
         </div>
         
-        <form 
-          onSubmit={handleSubmit}
-          className="w-full sm:w-2/3 md:w-1/2 flex"
-        >
-          <div className={`
-            relative w-full bg-white border-4 
-            ${isSearchFocused ? 'border-accent' : 'border-secondary'} 
-            px-3 py-2 rounded-l-md shadow-retro flex-grow transition-all duration-300
-          `}>
+        <form onSubmit={handleSubmit} className="w-full sm:w-2/3 md:w-1/2 flex">
+          <div className={`relative w-full bg-white border-4 ${focusedBorderClass} px-3 py-2 rounded-l-md shadow-retro flex-grow transition-all duration-300`}>
             <input
               type="text"
               value={searchQuery}

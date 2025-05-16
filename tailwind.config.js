@@ -5,11 +5,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#FF6B6B',    // coral pink
-        secondary: '#4ECDC4',  // turquoise
-        accent: '#FFE66D',     // sunny yellow
-        background: '#95E1D3', // mint green
-        textColor: '#2C3E50',  // dark blue
+        primary: '#3A59D1',
+        secondary: '#3D90D7',
+        accent: '#7AC6D2',
+        background: '#B5FCCD',
+        textColor: '#2C3E50',
+      },
+      backgroundImage: {
+        'gradient-primary': 'linear-gradient(to right, #3A59D1, #3D90D7)',
+        'gradient-accent':  'linear-gradient(to right, #7AC6D2, #B5FCCD)',
       },
       fontFamily: {
         'press-start': ['"Press Start 2P"', 'cursive'],
@@ -21,7 +25,7 @@ export default {
         'spin-slow': 'spin 3s linear infinite',
       },
       boxShadow: {
-        'retro': '4px 4px 0px rgba(0, 0, 0, 0.2)',
+        retro: '4px 4px 0px rgba(0, 0, 0, 0.2)',
         'retro-lg': '8px 8px 0px rgba(0, 0, 0, 0.2)',
       },
     },

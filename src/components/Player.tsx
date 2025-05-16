@@ -8,16 +8,9 @@ import {
   VolumeX,
   Music,
 } from 'lucide-react';
-import { VideoItem } from '../types';
-import { VideoPlayerRef } from './NowPlaying';
+import { PlayerProps } from '../types';
 
-interface PlayerProps {
-  currentVideo: VideoItem | null;
-  queue: VideoItem[];
-  onNextVideo: () => void;
-  onPrevVideo: () => void;
-  videoPlayerRef: React.RefObject<VideoPlayerRef>;
-}
+
 
 const Player: React.FC<PlayerProps> = ({
   currentVideo,

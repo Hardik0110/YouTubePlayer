@@ -1,37 +1,9 @@
-import React, {
-  useImperativeHandle,
-  forwardRef,
-  Ref,
-  useRef
-} from 'react';
+import React, { useImperativeHandle, forwardRef, Ref, useRef } from 'react';
 import YouTube, { YouTubePlayer, YouTubeEvent } from 'react-youtube';
-import { VideoItem } from '../types';
-
-export interface VideoPlayerRef {
-  player: YouTubePlayer | null;
-  isPlaying(): boolean;
-  togglePlay(): void;
-  getCurrentTime(): number;
-  getDuration(): number;
-  seekTo(seconds: number): void;
-  setVolume(volume: number): void;
-  mute(): void;
-  unMute(): void;
-  isMuted(): boolean;
-}
-
-interface NowPlayingProps {
-  currentVideo: VideoItem | null;
-  onPlayerReady(event: YouTubeEvent): void;
-  onPlayerStateChange(event: YouTubeEvent): void;
-}
+import { VideoPlayerRef, NowPlayingProps } from '../types';
 
 const NowPlaying = forwardRef(
-  (
-    { currentVideo, onPlayerReady, onPlayerStateChange }: NowPlayingProps,
-    ref: Ref<VideoPlayerRef>
-  ) => {
-    
+  ({ currentVideo, onPlayerReady, onPlayerStateChange }: NowPlayingProps, ref: Ref<VideoPlayerRef>) => {
     const playerRef = useRef<YouTubePlayer | null>(null);
 
     useImperativeHandle(ref, () => ({
@@ -44,8 +16,12 @@ const NowPlaying = forwardRef(
       togglePlay() {
         const player = playerRef.current;
         if (!player) return;
-        if (player.getPlayerState() === 1) player.pauseVideo();
-        else player.playVideo();
+        
+        if (player.getPlayerState() === 1) {
+          player.pauseVideo();
+        } else {
+          player.playVideo();
+        }
       },
       getCurrentTime() {
         return playerRef.current?.getCurrentTime() ?? 0;
