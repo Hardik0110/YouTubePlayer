@@ -5,6 +5,8 @@ export interface VideoItem {
   thumbnail: string;
   duration: string;
   viewCount: string;
+  startTime: number;
+  endTime: number;
 }
 
 export interface SearchResponse {
@@ -80,7 +82,7 @@ export interface VideoDetailItem {
     definition: string;
     caption: string;
     licensedContent: boolean;
-    contentRating: any;
+    contentRating: boolean;
   };
   statistics: {
     viewCount: string;

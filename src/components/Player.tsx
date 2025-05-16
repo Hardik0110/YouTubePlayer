@@ -36,24 +36,29 @@ const Player: React.FC<PlayerProps> = ({
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!currentVideo || !videoPlayerRef.current) return;
-    const player = videoPlayerRef.current;
+    if (!currentVideo) return;
 
-    setDuration(player.getDuration());
-    setIsMuted(player.isMuted());
-    player.setVolume(volume);
+    
+    setCurrentTime(currentVideo!.startTime);
+    setDuration(currentVideo!.endTime - currentVideo!.startTime);
 
-    // define tracking functions inside useEffect
+    const pl = videoPlayerRef.current;
+    if (!pl) return;
+
+    setIsMuted(pl.isMuted());
+    pl.setVolume(volume);
+
     function startTracking() {
       stopTracking();
       intervalRef.current = window.setInterval(() => {
-        const pl = videoPlayerRef.current;
-        if (pl) {
-          setCurrentTime(pl.getCurrentTime());
-          setIsPlaying(pl.isPlaying());
+        const player = videoPlayerRef.current;
+        if (player) {
+          setCurrentTime(currentVideo!.startTime + player.getCurrentTime());
+          setIsPlaying(player.isPlaying());
         }
       }, 500);
     }
+
     function stopTracking() {
       if (intervalRef.current !== null) {
         window.clearInterval(intervalRef.current);
@@ -62,17 +67,8 @@ const Player: React.FC<PlayerProps> = ({
     }
 
     startTracking();
-    return () => {
-      stopTracking();
-    };
+    return () => stopTracking();
   }, [currentVideo, videoPlayerRef, volume]);
-
-  useEffect(() => {
-    const pl = videoPlayerRef.current;
-    if (pl) {
-      setIsPlaying(pl.isPlaying());
-    }
-  }, [videoPlayerRef, currentVideo]);
 
   const format = (sec: number) => {
     if (isNaN(sec) || sec < 0) return '0:00';
@@ -87,7 +83,7 @@ const Player: React.FC<PlayerProps> = ({
     const pl = videoPlayerRef.current;
     if (!pl) return;
     pl.togglePlay();
-    setIsPlaying((p) => !p);
+    setIsPlaying(p => !p);
   };
 
   const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +91,6 @@ const Player: React.FC<PlayerProps> = ({
     if (!pl) return;
     const v = Number(e.target.value);
     setVolume(v);
-
     if (v === 0) {
       pl.mute();
       setIsMuted(true);
@@ -108,25 +103,30 @@ const Player: React.FC<PlayerProps> = ({
     }
   };
 
-  const toggleMute = () => {
+    const toggleMute = () => {
     const pl = videoPlayerRef.current;
     if (!pl) return;
-    if (isMuted) pl.unMute();
-    else pl.mute();
-    setIsMuted((m) => !m);
+
+    if (isMuted) {
+      pl.unMute();
+    } else {
+      pl.mute();
+    }
+
+    setIsMuted(m => !m);
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const pl = videoPlayerRef.current;
     const bar = progressBarRef.current;
-    if (!pl || !bar) return;
+    const pl = videoPlayerRef.current;
+    if (!bar || !pl) return;
 
     const rect = bar.getBoundingClientRect();
     const pct = (e.clientX - rect.left) / rect.width;
-    const t = pct * duration;
+    const target = pct * duration;
 
-    pl.seekTo(t);
-    setCurrentTime(t);
+    pl.seekTo(target);
+    setCurrentTime(currentVideo!.startTime + target);
   };
 
   return (
@@ -144,7 +144,6 @@ const Player: React.FC<PlayerProps> = ({
             </div>
           </div>
 
-          {/* Progress bar */}
           <div
             ref={progressBarRef}
             onClick={seek}
@@ -153,67 +152,33 @@ const Player: React.FC<PlayerProps> = ({
             <div
               className="h-full bg-accent transition-all duration-200"
               style={{
-                width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
+                width: duration > 0 ? `${((currentTime - currentVideo!.startTime) / duration) * 100}%` : '0%'
               }}
             />
           </div>
 
           <div className="flex justify-between items-center text-xs font-vt323 text-white mb-2">
             <span>{format(currentTime)}</span>
-            <span>{format(duration)}</span>
+            <span>{format(currentVideo!.endTime)}</span>
           </div>
 
-          {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <button
-                onClick={onPrevVideo}
-                disabled={!currentVideo}
-                className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50"
-              >
+              <button onClick={onPrevVideo} disabled={!currentVideo} className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50">
                 <SkipBack className="w-5 h-5" />
               </button>
-
-              <button
-                onClick={togglePlay}
-                className="bg-accent p-3 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
-              >
-                {isPlaying ? (
-                  <Pause className="w-6 h-6" />
-                ) : (
-                  <Play className="w-6 h-6" />
-                )}
+              <button onClick={togglePlay} className="bg-accent p-3 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro">
+                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </button>
-
-              <button
-                onClick={onNextVideo}
-                disabled={queue.length === 0}
-                className="bg-accent p-2 rounded-full transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50"
-              >
+              <button onClick={onNextVideo} disabled={queue.length === 0} className="bg-accent p-2 rounded-full transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50">
                 <SkipForward className="w-5 h-5" />
               </button>
             </div>
-
             <div className="flex items-center">
-              <button
-                onClick={toggleMute}
-                className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
-              >
-                {isMuted || volume === 0 ? (
-                  <VolumeX className="w-5 h-5" />
-                ) : (
-                  <Volume2 className="w-5 h-5" />
-                )}
+              <button onClick={toggleMute} className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro">
+                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
-
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={volume}
-                onChange={changeVolume}
-                className="w-24 accent-accent cursor-pointer"
-              />
+              <input type="range" min="0" max="100" value={volume} onChange={changeVolume} className="w-24 accent-accent cursor-pointer" />
             </div>
           </div>
         </div>
@@ -226,7 +191,7 @@ const Player: React.FC<PlayerProps> = ({
         </div>
       )}
     </div>
-  ); 
+  );
 };
 
 export default Player;
