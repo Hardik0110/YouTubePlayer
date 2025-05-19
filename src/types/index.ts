@@ -154,7 +154,8 @@ export interface VideoPlayerRef {
  */
 export interface PlayerProps {
   currentVideo: VideoItem | null;
-  onPrevVideo: () => void;   // Keep only previous video handler
+  onPrevVideo: () => void;   // Handler for previous video
+  onNextVideo: () => void;   // Handler for next video in queue
   videoPlayerRef: React.RefObject<VideoPlayerRef>;
 }
 

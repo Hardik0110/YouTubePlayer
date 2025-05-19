@@ -18,7 +18,8 @@
     "react-dom": "^18.3.1",
     "react-error-boundary": "^6.0.0",
     "react-youtube": "^10.1.0",
-    "styled-components": "^6.1.18"
+    "styled-components": "^6.1.18",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

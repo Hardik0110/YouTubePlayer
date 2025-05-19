@@ -1,4 +1,5 @@
 import React from 'react';
+import { PlusCircle } from 'lucide-react';
 import VideoItem from './VideoItem';
 import { VideoItem as VideoItemType } from '../types';
 import { Music } from 'lucide-react';
@@ -6,6 +7,7 @@ import { Music } from 'lucide-react';
 export interface VideoListProps {
   videos: VideoItemType[];
   onSelectVideo: (video: VideoItemType) => void;
+  onAddToQueue: (video: VideoItemType) => void;
   currentVideo: VideoItemType | null;
   isLoading: boolean;
   searchTerm: string;
@@ -16,6 +18,7 @@ export interface VideoListProps {
 const VideoList: React.FC<VideoListProps> = ({
   videos,
   onSelectVideo,
+  onAddToQueue,
   currentVideo,
   isLoading,
   searchTerm,
@@ -43,17 +46,28 @@ const VideoList: React.FC<VideoListProps> = ({
 
   return (
     <div className="p-4">
+      <h2 className="text-textColor font-press-start text-lg mb-4">Search Results</h2>
       {videos.map((video, index) => (
         <div
           key={video.id}
           ref={index === videos.length - 1 ? lastVideoRef : undefined}
-          className="mb-4"
+          className="mb-4 relative group"
         >
           <VideoItem
             video={video}
             onSelect={onSelectVideo}
             isActive={currentVideo?.id === video.id}
           />
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToQueue(video);
+            }}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-accent p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Add to queue"
+          >
+            <PlusCircle className="w-5 h-5 text-white" />
+          </button>
         </div>
       ))}
       {isLoading && (
