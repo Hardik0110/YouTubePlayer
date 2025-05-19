@@ -1,25 +1,35 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import VideoItem from './VideoItem';
 import { VideoItem as VideoItemType } from '../types';
 import { Music } from 'lucide-react';
 
-interface VideoListProps {
+export interface VideoListProps {
   videos: VideoItemType[];
   onSelectVideo: (video: VideoItemType) => void;
   currentVideo: VideoItemType | null;
   isLoading: boolean;
   searchTerm: string;
-  lastVideoRef?: (node: HTMLDivElement) => void; // Add this prop
+  error: string | null;
+  lastVideoRef?: ((node: HTMLDivElement | null) => void) | null;
 }
 
-const VideoList: React.FC<VideoListProps> = ({ 
-  videos, 
-  onSelectVideo, 
+const VideoList: React.FC<VideoListProps> = ({
+  videos,
+  onSelectVideo,
   currentVideo,
   isLoading,
   searchTerm,
-  lastVideoRef
+  error,
+  lastVideoRef,
 }) => {
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-4">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
   if (!videos.length && !isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-4">
@@ -36,7 +46,8 @@ const VideoList: React.FC<VideoListProps> = ({
       {videos.map((video, index) => (
         <div
           key={video.id}
-          ref={index === videos.length - 1 ? lastVideoRef : null}
+          ref={index === videos.length - 1 ? lastVideoRef : undefined}
+          className="mb-4"
         >
           <VideoItem
             video={video}

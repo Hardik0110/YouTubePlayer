@@ -1,20 +1,35 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { getTrendingVideos } from '../services/youtubeApi';
 import { VideoItem } from '../types';
 
 interface TrendingResponse {
   videos: VideoItem[];
   nextPageToken?: string;
+  pages?: number;
 }
 
-export const useTrendingVideos = () => {
-  return useInfiniteQuery<TrendingResponse>({
+interface TrendingQueryParams {
+  pageParam?: string;
+}
+
+export const useTrendingVideos = (): UseInfiniteQueryResult<TrendingResponse, Error> => {
+  return useInfiniteQuery<TrendingResponse, Error, TrendingResponse, [string], string>({
     queryKey: ['trending'],
-    queryFn: ({ pageParam = '' }) => getTrendingVideos({ pageParam }),
+    initialPageParam: '',
+    queryFn: async ({ pageParam = '' }: TrendingQueryParams) => {
+      try {
+        return await getTrendingVideos({ pageParam });
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(`Failed to fetch trending videos: ${error.message}`);
+        }
+        throw new Error('Failed to fetch trending videos');
+      }
+    },
     getNextPageParam: (lastPage) => lastPage.nextPageToken,
-    initialPageSize: 10,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    suspense: false,
-    keepPreviousData: true,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), 
+    refetchOnWindowFocus: false,
   });
 };

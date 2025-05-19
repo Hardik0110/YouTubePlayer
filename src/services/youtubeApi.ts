@@ -1,26 +1,56 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import { SearchResponse, VideoDetailResponse, VideoItem } from '../types';
 
 const API_KEY = 'AIzaSyAYczYJhbB6_pkwy7va2Dm6S3BcGcZrAMo';
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
+// API request timeout in milliseconds
+const REQUEST_TIMEOUT = 10000;
 
+// Create axios instance with common configuration
+const youtubeApi: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: REQUEST_TIMEOUT,
+  params: { key: API_KEY },
+});
+
+// Error handler for API requests
+const handleApiError = (error: unknown): never => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response) {
+      throw new Error(
+        `YouTube API Error: ${axiosError.response.status} - ${JSON.stringify(
+          axiosError.response.data
+        )}`
+      );
+    } else if (axiosError.request) {
+      throw new Error('Network error: No response received from YouTube API');
+    }
+    throw new Error(`Request setup error: ${axiosError.message}`);
+  }
+  throw new Error(`Unexpected error: ${String(error)}`);
+};
+
+// Convert ISO 8601 duration to seconds
 const parseDurationToSeconds = (duration: string): number => {
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const match: RegExpMatchArray | null = duration.match(
+    /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/
+  );
   if (!match) return 0;
 
-  const hours = parseInt(match[1] || '0');
-  const minutes = parseInt(match[2] || '0');
-  const seconds = parseInt(match[3] || '0');
+  const hours: number = parseInt(match[1] || '0', 10);
+  const minutes: number = parseInt(match[2] || '0', 10);
+  const seconds: number = parseInt(match[3] || '0', 10);
   return hours * 3600 + minutes * 60 + seconds;
 };
 
-
+// Format duration for display
 export const formatDuration = (duration: string): string => {
-  const totalSeconds = parseDurationToSeconds(duration);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const totalSeconds: number = parseDurationToSeconds(duration);
+  const hours: number = Math.floor(totalSeconds / 3600);
+  const minutes: number = Math.floor((totalSeconds % 3600) / 60);
+  const seconds: number = totalSeconds % 60;
 
   if (hours > 0) {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds
@@ -30,89 +60,151 @@ export const formatDuration = (duration: string): string => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+// Format view count for display
 export const formatViewCount = (viewCount: string): string => {
-  const count = parseInt(viewCount);
-  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M views`;
-  if (count >= 1000) return `${(count / 1000).toFixed(1)}K views`;
+  const count: number = parseInt(viewCount, 10);
+  if (count >= 1_000_000) {
+    return `${(count / 1_000_000).toFixed(1)}M views`;
+  }
+  if (count >= 1_000) {
+    return `${(count / 1_000).toFixed(1)}K views`;
+  }
   return `${count} views`;
 };
 
-export const searchVideos = async (query: string): Promise<VideoItem[]> => {
+// Search videos
+export const searchVideos = async (
+  query: string
+): Promise<VideoItem[] | undefined> => {
+  if (!query.trim()) {
+    return [];
+  }
+
   try {
-    const searchResponse = await axios.get<SearchResponse>(`${BASE_URL}/search`, {
+    const searchResponse = await youtubeApi.get<SearchResponse>('/search', {
       params: {
         part: 'snippet',
         maxResults: 10,
         q: query,
         type: 'video',
         order: 'viewCount',
-        key: API_KEY,
       },
     });
 
-    if (!searchResponse.data.items.length) return [];
+    const items = searchResponse.data.items || [];
+    if (items.length === 0) {
+      return [];
+    }
 
-    const videoIds = searchResponse.data.items
-      .filter(item => item.id.videoId)
-      .map(item => item.id.videoId);
+    const videoIds: string[] = items
+      .filter(item => item.id?.videoId)
+      .map(item => item.id.videoId as string);
 
-    const detailsResponse = await axios.get<VideoDetailResponse>(`${BASE_URL}/videos`, {
-      params: {
-        part: 'contentDetails,statistics,snippet',
-        id: videoIds.join(','),
-        key: API_KEY,
-      },
-    });
+    if (videoIds.length === 0) {
+      return [];
+    }
 
-    return detailsResponse.data.items.map(item => {
-      const durationInSeconds = parseDurationToSeconds(item.contentDetails.duration);
+    const detailsResponse = await youtubeApi.get<VideoDetailResponse>(
+      '/videos',
+      {
+        params: {
+          part: 'contentDetails,statistics,snippet',
+          id: videoIds.join(','),
+        },
+      }
+    );
+
+    const detailItems = detailsResponse.data.items || [];
+    if (detailItems.length === 0) {
+      return [];
+    }
+
+    return detailItems.map(item => {
+      const durationString: string = item.contentDetails.duration || 'PT0S';
+      const viewCountString: string = item.statistics.viewCount || '0';
+      const durationInSeconds: number = parseDurationToSeconds(
+        durationString
+      );
+
       return {
         id: item.id,
-        title: item.snippet.title,
-        channelTitle: item.snippet.channelTitle,
-        thumbnail: item.snippet.thumbnails.high.url,
-        duration: formatDuration(item.contentDetails.duration),
-        viewCount: formatViewCount(item.statistics.viewCount),
+        title: item.snippet.title || 'Untitled Video',
+        channelTitle: item.snippet.channelTitle || 'Unknown Channel',
+        thumbnail:
+          item.snippet.thumbnails.high?.url ||
+          item.snippet.thumbnails.medium?.url ||
+          item.snippet.thumbnails.default?.url ||
+          '',
+        duration: formatDuration(durationString),
+        viewCount: formatViewCount(viewCountString),
         startTime: 0,
         endTime: durationInSeconds,
       };
     });
-  } catch (error) {
-    console.error('Error searching videos:', error);
-    return [];
+  } catch (error: unknown) {
+    handleApiError(error);
   }
 };
 
-export const getTrendingVideos = async ({ pageParam = '' }) => {
+// Params and result types for trending
+export interface TrendingParams {
+  pageParam?: string;
+}
+
+export interface TrendingResult {
+  videos: VideoItem[];
+  nextPageToken?: string;
+}
+
+// Get trending videos with pagination
+export const getTrendingVideos = async (
+  params: TrendingParams
+): Promise<TrendingResult> => {
   try {
-    const videosResponse = await axios.get<VideoDetailResponse>(`${BASE_URL}/videos`, {
-      params: {
-        part: 'snippet,contentDetails,statistics',
-        chart: 'mostPopular',
-        maxResults: 20,
-        pageToken: pageParam,
-        regionCode: 'US',
-        key: API_KEY,
-      },
+    const response = await youtubeApi.get<VideoDetailResponse>(
+      '/videos',
+      {
+        params: {
+          part: 'snippet,contentDetails,statistics',
+          chart: 'mostPopular',
+          maxResults: 20,
+          pageToken: params.pageParam,
+          regionCode: 'US',
+        },
+      }
+    );
+
+    const items = response.data.items || [];
+    const videos: VideoItem[] = items.map(item => {
+      const durationString: string = item.contentDetails.duration || 'PT0S';
+      const viewCountString: string = item.statistics.viewCount || '0';
+      const durationInSeconds: number = parseDurationToSeconds(
+        durationString
+      );
+      const thumbnailUrl: string =
+        item.snippet.thumbnails.high?.url ||
+        item.snippet.thumbnails.medium?.url ||
+        item.snippet.thumbnails.default?.url ||
+        '';
+
+      return {
+        id: item.id,
+        title: item.snippet.title || 'Untitled Video',
+        channelTitle: item.snippet.channelTitle || 'Unknown Channel',
+        thumbnail: thumbnailUrl,
+        duration: formatDuration(durationString),
+        viewCount: formatViewCount(viewCountString),
+        startTime: 0,
+        endTime: durationInSeconds,
+      };
     });
 
-    const formattedVideos = videosResponse.data.items.map(item => ({
-      id: item.id,
-      title: item.snippet.title,
-      channelTitle: item.snippet.channelTitle,
-      thumbnail: item.snippet.thumbnails.high.url,
-      duration: formatDuration(item.contentDetails.duration),
-      viewCount: formatViewCount(item.statistics.viewCount),
-      startTime: 0,
-      endTime: parseDurationToSeconds(item.contentDetails.duration),
-    }));
-
     return {
-      videos: formattedVideos,
-      nextPageToken: videosResponse.data.nextPageToken,
+      videos,
+      nextPageToken: response.data.nextPageToken,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching trending videos:', error);
-    throw error;
+    return { videos: [] };
   }
 };

@@ -84,9 +84,9 @@ export interface VideoDetailItem {
     title: string;           // Video title
     description: string;     // Video description
     thumbnails: {            // Various thumbnail sizes
-      default: Thumbnail;    // Small thumbnail
-      medium: Thumbnail;     // Medium thumbnail
-      high: Thumbnail;       // High quality thumbnail
+      default?: Thumbnail;   // Small thumbnail
+      medium?: Thumbnail;    // Medium thumbnail
+      high?: Thumbnail;      // High quality thumbnail
       standard?: Thumbnail;  // Standard quality thumbnail (optional)
       maxres?: Thumbnail;    // Maximum resolution thumbnail (optional)
     };
@@ -114,7 +114,7 @@ export interface VideoDetailItem {
 /**
  * Thumbnail information for YouTube items
  */
-interface Thumbnail {
+export interface Thumbnail {
   url: string;               // URL to the thumbnail image
   width: number;             // Width of the thumbnail in pixels
   height: number;            // Height of the thumbnail in pixels
@@ -164,5 +164,4 @@ export interface PlayerProps {
 export interface NowPlayingProps {
   currentVideo: VideoItem | null; // Currently playing video
   onPlayerReady(event: YouTubeEvent): void; // Called when player is ready
-  // onPlayerStateChange(event: YouTubeEvent): void; // Called when player state changes
 }
