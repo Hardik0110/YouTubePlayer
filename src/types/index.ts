@@ -61,6 +61,7 @@ export interface YouTubeSearchItem {
  * YouTube API response for detailed video information
  */
 export interface VideoDetailResponse {
+  nextPageToken?: string;
   kind: string;              // Resource type identifier
   etag: string;              // ETag for caching purposes
   items: VideoDetailItem[];  // Array of video details
@@ -152,11 +153,9 @@ export interface VideoPlayerRef {
  * Props for the main player component
  */
 export interface PlayerProps {
-  currentVideo: VideoItem | null; // Currently playing video
-  queue: VideoItem[];        // Playlist/queue of videos
-  onNextVideo: () => void;   // Handler for playing next video
-  onPrevVideo: () => void;   // Handler for playing previous video
-  videoPlayerRef: React.RefObject<VideoPlayerRef>; // Reference to player controls
+  currentVideo: VideoItem | null;
+  onPrevVideo: () => void;   // Keep only previous video handler
+  videoPlayerRef: React.RefObject<VideoPlayerRef>;
 }
 
 /**
@@ -165,5 +164,5 @@ export interface PlayerProps {
 export interface NowPlayingProps {
   currentVideo: VideoItem | null; // Currently playing video
   onPlayerReady(event: YouTubeEvent): void; // Called when player is ready
-  onPlayerStateChange(event: YouTubeEvent): void; // Called when player state changes
+  // onPlayerStateChange(event: YouTubeEvent): void; // Called when player state changes
 }

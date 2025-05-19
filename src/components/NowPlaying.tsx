@@ -3,7 +3,7 @@ import YouTube, { YouTubePlayer, YouTubeEvent } from 'react-youtube';
 import { VideoPlayerRef, NowPlayingProps } from '../types';
 
 const NowPlaying = forwardRef(
-  ({ currentVideo, onPlayerReady, onPlayerStateChange }: NowPlayingProps, ref: Ref<VideoPlayerRef>) => {
+  ({ currentVideo, onPlayerReady }: NowPlayingProps, ref: Ref<VideoPlayerRef>) => {
     const playerRef = useRef<YouTubePlayer | null>(null);
 
     useImperativeHandle(ref, () => ({
@@ -51,9 +51,9 @@ const NowPlaying = forwardRef(
       onPlayerReady(event);
     };
 
-    const handleStateChange = (event: YouTubeEvent) => {
-      onPlayerStateChange(event);
-    };
+    // const handleStateChange = (event: YouTubeEvent) => {
+    //   onPlayerStateChange(event);
+    // };
 
     if (!currentVideo) {
       return (
@@ -88,7 +88,7 @@ const NowPlaying = forwardRef(
               }
             }}
             onReady={handleReady}
-            onStateChange={handleStateChange}
+            // onStateChange={handleStateChange}
           />
         </div>
         <div className="mt-4 text-center">

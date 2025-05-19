@@ -45,6 +45,7 @@ export const searchVideos = async (query: string): Promise<VideoItem[]> => {
         maxResults: 10,
         q: query,
         type: 'video',
+        order: 'viewCount',
         key: API_KEY,
       },
     });
@@ -82,33 +83,36 @@ export const searchVideos = async (query: string): Promise<VideoItem[]> => {
   }
 };
 
-export const getTrendingVideos = async (): Promise<VideoItem[]> => {
+export const getTrendingVideos = async ({ pageParam = '' }) => {
   try {
-    const response = await axios.get<VideoDetailResponse>(`${BASE_URL}/videos`, {
+    const videosResponse = await axios.get<VideoDetailResponse>(`${BASE_URL}/videos`, {
       params: {
         part: 'snippet,contentDetails,statistics',
         chart: 'mostPopular',
-        maxResults: 10,
-        videoCategoryId: '10',
+        maxResults: 20,
+        pageToken: pageParam,
+        regionCode: 'US',
         key: API_KEY,
       },
     });
 
-    return response.data.items.map(item => {
-      const durationInSeconds = parseDurationToSeconds(item.contentDetails.duration);
-      return {
-        id: item.id,
-        title: item.snippet.title,
-        channelTitle: item.snippet.channelTitle,
-        thumbnail: item.snippet.thumbnails.high.url,
-        duration: formatDuration(item.contentDetails.duration),
-        viewCount: formatViewCount(item.statistics.viewCount),
-        startTime: 0,
-        endTime: durationInSeconds,
-      };
-    });
+    const formattedVideos = videosResponse.data.items.map(item => ({
+      id: item.id,
+      title: item.snippet.title,
+      channelTitle: item.snippet.channelTitle,
+      thumbnail: item.snippet.thumbnails.high.url,
+      duration: formatDuration(item.contentDetails.duration),
+      viewCount: formatViewCount(item.statistics.viewCount),
+      startTime: 0,
+      endTime: parseDurationToSeconds(item.contentDetails.duration),
+    }));
+
+    return {
+      videos: formattedVideos,
+      nextPageToken: videosResponse.data.nextPageToken,
+    };
   } catch (error) {
     console.error('Error fetching trending videos:', error);
-    return [];
+    throw error;
   }
 };

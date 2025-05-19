@@ -14,8 +14,6 @@ import { PlayerProps } from '../types';
 
 const Player: React.FC<PlayerProps> = ({
   currentVideo,
-  queue,
-  onNextVideo,
   onPrevVideo,
   videoPlayerRef,
 }) => {
@@ -49,7 +47,7 @@ const Player: React.FC<PlayerProps> = ({
           setCurrentTime(currentVideo!.startTime + player.getCurrentTime());
           setIsPlaying(player.isPlaying());
         }
-      }, 500);
+      }, 500);              
     }
 
     function stopTracking() {
@@ -163,7 +161,7 @@ const Player: React.FC<PlayerProps> = ({
               <button onClick={togglePlay} className="bg-accent p-3 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro">
                 {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </button>
-              <button onClick={onNextVideo} disabled={queue.length === 0} className="bg-accent p-2 rounded-full transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50">
+              <button className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50">
                 <SkipForward className="w-5 h-5" />
               </button>
             </div>
