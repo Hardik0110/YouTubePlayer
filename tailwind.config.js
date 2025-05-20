@@ -5,15 +5,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#3A59D1',
-        secondary: '#3D90D7',
-        accent: '#7AC6D2',
-        background: '#B5FCCD',
-        textColor: '#2C3E50',
+        primary: '#041562',   // midnight blue
+        secondary: '#11468F', // deep ocean blue
+        accent: '#DA1212',    // vivid red
+        background: '#000000',// light gray
+        textColor: '#11468F', // deep ocean blue
       },
       backgroundImage: {
-        'gradient-primary': 'linear-gradient(to right, #3A59D1, #3D90D7)',
-        'gradient-accent':  'linear-gradient(to right, #7AC6D2, #B5FCCD)',
+        'gradient-primary': 'linear-gradient(to right, #041562, #11468F)',
+        'gradient-accent':  'linear-gradient(to right, #DA1212,rgb(0, 0, 0))',
       },
       fontFamily: {
         'press-start': ['"Press Start 2P"', 'cursive'],

@@ -83,7 +83,6 @@ function App(): JSX.Element {
             </div>
 
             <div className="w-full lg:w-2/4 overflow-hidden border-r-4 border-secondary">
-              tájékoztató
               <NowPlaying
                 ref={videoPlayerRef}
                 currentVideo={currentVideo}
