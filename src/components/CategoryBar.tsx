@@ -1,5 +1,5 @@
-import React from 'react';
-import { Music } from 'lucide-react';
+import React, { useRef } from 'react';
+import { ChevronLeft, ChevronRight, Music } from 'lucide-react';
 import Button from './ui/Button';
 
 interface CategoryBarProps {
@@ -30,30 +30,57 @@ const activeColors: Record<string, string> = {
   '--yellow-400': '#d1d9ff'
 };
 
-const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCategory }) => (
-  <div className="bg-secondary/50 backdrop-blur-sm border-b border-secondary/30">
-    <div className="container mx-auto px-4">
-      <div className="flex items-center space-x-2 py-3 overflow-x-auto scrollbar-hide">
-        {categories.map(label => {
-          const isActive = activeCategory === label;
-          const varColors = isActive ? activeColors : presets[label];
-          return (
-            <Button
-              key={label}
-              onClick={() => onCategorySelect(label)}
-              varColors={varColors}
-              className={`flex items-center space-x-2 text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                isActive ? '' : 'opacity-80 hover:opacity-100'
-              }`}
-            >
-              <Music className="w-4 h-4" />
-              <span>{label}</span>
-            </Button>
-          );
-        })}
+const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCategory }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (offset: number) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div className="bg-secondary/50 backdrop-blur-sm border-b border-secondary/30">
+      <div className="container mx-auto px-4 flex items-center relative">
+        <button
+          onClick={() => scroll(-200)}
+          className="p-2 rounded-full border-2 border-white bg-accent hover:bg-muted/80 transition-colors"
+        >
+          <ChevronLeft size={20} />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex items-center space-x-2 py-3 overflow-x-auto scrollbar-hide mx-2"
+        >
+          {categories.map(label => {
+            const isActive = activeCategory === label;
+            const varColors = isActive ? activeColors : presets[label];
+            return (
+              <Button
+                key={label}
+                onClick={() => onCategorySelect(label)}
+                varColors={varColors}
+                className={`flex items-center space-x-2 text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  isActive ? '' : 'opacity-80 hover:opacity-100'
+                }`}
+              >
+                <Music className="w-4 h-4" />
+                <span>{label}</span>
+              </Button>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={() => scroll(200)}
+          className="p-2 rounded-full border-2 border-white bg-accent hover:bg-muted/80 transition-colors"
+        >
+          <ChevronRight size={20} />
+        </button>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-export default CategoryBar; 
+export default CategoryBar;

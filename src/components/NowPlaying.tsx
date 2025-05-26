@@ -71,7 +71,7 @@ const NowPlaying = forwardRef(
 
     return (
       <div className="p-4 h-full flex flex-col">
-        <h2 className="font-press-start text-lg text-textColor mb-4">
+        <h2 className="font-press-start text-lg text-accent mb-4">
           Now Playing
         </h2>
         <div className="flex-grow relative w-full border-4 border-primary shadow-retro-lg rounded-lg overflow-hidden">
@@ -92,10 +92,10 @@ const NowPlaying = forwardRef(
           />
         </div>
         <div className="mt-4 text-center">
-          <h3 className="font-vt323 text-2xl text-textColor font-bold">
+          <h3 className="font-vt323 text-2xl text-accent font-bold">
             {currentVideo.title}
           </h3>
-          <p className="font-vt323 text-lg text-gray-700">
+          <p className="font-vt323 text-lg text-red-700">
             {currentVideo.channelTitle}
           </p>
         </div>

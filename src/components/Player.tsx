@@ -47,7 +47,7 @@ const Player: React.FC<PlayerProps> = ({
       pl.mute();
     } else {
       pl.unMute();
-    }
+    } 
 
     const startTracking = () => {
       if (intervalRef.current !== null) {

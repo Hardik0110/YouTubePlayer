@@ -17,7 +17,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary border-2 border-secondary;
+  @apply bg-accent border-2 border-secondary;
   border-radius: 6px;
 }
 

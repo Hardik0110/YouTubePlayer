@@ -46,7 +46,7 @@ const VideoList: React.FC<VideoListProps> = ({
 
   return (
     <div className="p-4">
-      <h2 className="text-textColor font-press-start text-lg mb-4">Search Results</h2>
+      <h2 className="text-accent font-press-start text-lg mb-4">Search Results</h2>
       {videos.map((video, index) => (
         <div
           key={video.id}
