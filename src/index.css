@@ -116,3 +116,17 @@ input[type=range]::-webkit-slider-thumb {
   -ms-overflow-style: none;  
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Add these styles */
+:picture-in-picture {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Optional: Add a media query for PiP window size */
+@media (display-mode: picture-in-picture) {
+  video {
+    width: 100%;
+    height: 100%;
+  }
+}

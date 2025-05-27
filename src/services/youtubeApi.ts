@@ -169,7 +169,7 @@ export const getTrendingVideos = async (
           chart: 'mostPopular',
           maxResults: 20,
           pageToken: params.pageParam,
-          regionCode: 'US',
+          regionCode: 'IN',
         },
       }
     );

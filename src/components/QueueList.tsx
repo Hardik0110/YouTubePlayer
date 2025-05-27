@@ -19,13 +19,13 @@ const QueueList: React.FC<QueueListProps> = ({
 }) => {
   return (
     <div className="p-4">
-      <h2 className="text-accent font-press-start text-lg mb-4">Queue</h2>
+      <h2 className="text-primary font-press-start text-lg mb-4">Queue</h2>
       
       {queueVideos.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-4">
-          <Music className="w-12 h-12 text-accent mb-4" />
-          <p className="text-center text-accent">Queue is empty</p>
-          <p className="text-center text-accent text-sm mt-2">Add videos from the search results</p>
+          <Music className="w-12 h-12 text-primary mb-4" />
+          <p className="text-center text-primary text-lg">Queue is empty</p>
+          <p className="text-center text-primary text-md mt-3">Add videos from the search results</p>
         </div>
       ) : (
         queueVideos.map((video, index) => (

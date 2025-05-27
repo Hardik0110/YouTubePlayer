@@ -13,7 +13,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       onSearch(searchQuery);
-      setSearchQuery(''); // Clear the search input after submission
+      setSearchQuery(''); // Clears the search input after submission
     }
   };
 
@@ -23,8 +23,8 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     <header className="bg-primary px-4 py-3 shadow-retro">
       <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">
         <div className="flex items-center mb-3 sm:mb-0">
-          <Music className="w-8 h-8 text-accent mr-2" />
-          <h1 className="font-press-start text-2xl text-accent">MujiK Player</h1>
+          <Music className="w-8 h-8 text-white mr-2" />
+          <h1 className="font-press-start text-2xl text-white">MujiK Player</h1>
         </div>
         
         <form onSubmit={handleSubmit} className="w-full sm:w-2/3 md:w-1/2 flex">

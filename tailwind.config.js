@@ -5,37 +5,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#3A0CA3',    // zaffre (main brand color)
-        secondary: '#4361EE',  // neon-blue
-        accent: '#F72585',     // rose (vibrant accent)
-        background: '#000000', // black
-        textColor: '#4CC9F0',  // vivid-sky-blue
+        primary: '#0F0F0F',
+        secondary: '#232D3F',
+        accent: '#005B41',
+        background: '#008170',
+        textColor: '#0F0F0F',
         button: {
-          base: '#7209B7',       // grape
-          text: '#4CC9F0',       // vivid-sky-blue
-          highlight: '#F72585',   // rose
-          hover: 'rgba(76, 201, 240, 0.3)', // vivid-sky-blue with opacity
-          active: 'rgba(76, 201, 240, 0.25)'// vivid-sky-blue with opacity
+          base: '#0F0F0F',
+          text: '#008170',
+          highlight: '#005B41',
+          hover: 'rgba(0, 91, 65, 0.3)',
+          active: 'rgba(91, 0, 0, 0.25)'
         },
         category: {
-          base: '#3A0CA3',    // zaffre
-          light: '#4CC9F0',   // vivid-sky-blue
-          accent: '#F72585',   // rose
+          text: '#FFFFFF',      
+          base: '#0F0F0F',
+          light: '#008170',
+          accent: '#232D3F',
           active: {
-            base: '#F72585',    // rose
-            light: '#4CC9F0',   // vivid-sky-blue
-            accent: '#3A0CA3'   // zaffre
+            base: '#232D3F',
+            light: '#008170',
+            accent: '#0F0F0F'
           }
         }
       },
       backgroundImage: {
-        'gradient-primary': 'linear-gradient(to right, #3A0CA3, #4361EE)',
-        'gradient-accent': 'linear-gradient(to right, #F72585, #4CC9F0)',
-        'gradient-rainbow': 'linear-gradient(45deg, #F72585, #B5179E, #7209B7, #560BAD, #480CA8, #3A0CA3, #3F37C9, #4361EE, #4895EF, #4CC9F0)',
+        'gradient-primary': 'linear-gradient(to right, #0F0F0F, #232D3F)',
+        'gradient-accent': 'linear-gradient(to right, #232D3F, #005B41)',
+        'gradient-rainbow': 'linear-gradient(45deg, #0F0F0F, #232D3F, #005B41, #008170)'
       },
       fontFamily: {
         'press-start': ['"Press Start 2P"', 'cursive'],
-        'vt323': ['"VT323"', 'monospace'],
+        'vt323': ['"VT323"', 'monospace']
       },
       keyframes: {
         dots: {
@@ -47,19 +48,19 @@ export default {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'bounce-slow': 'bounce 2s infinite',
         'spin-slow': 'spin 3s linear infinite',
-        'dots': 'dots 0.5s infinite linear'
+        dots: 'dots 0.5s infinite linear'
       },
       boxShadow: {
         retro: '4px 4px 0px rgba(0, 0, 0, 0.2)',
-        'retro-lg': '8px 8px 0px rgba(0, 0, 0, 0.2)',
+        'retro-lg': '8px 8px 0px rgba(0, 0, 0, 0.2)'
       },
       borderWidth: {
-        '3': '3px',
+        '3': '3px'
       },
       scale: {
-        '102': '1.02',
+        '102': '1.02'
       }
-    },
+    }
   },
-  plugins: [],
-};
+  plugins: []
+}

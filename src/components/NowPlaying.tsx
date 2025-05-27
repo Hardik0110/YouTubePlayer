@@ -5,6 +5,7 @@ import { VideoPlayerRef, NowPlayingProps } from '../types';
 const NowPlaying = forwardRef(
   ({ currentVideo, onPlayerReady }: NowPlayingProps, ref: Ref<VideoPlayerRef>) => {
     const playerRef = useRef<YouTubePlayer | null>(null);
+    const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
     useImperativeHandle(ref, () => ({
       get player() {
@@ -43,11 +44,15 @@ const NowPlaying = forwardRef(
       },
       isMuted() {
         return playerRef.current?.isMuted() ?? false;
+      },
+      getIframe() {
+        return iframeRef.current;
       }
     }));
 
     const handleReady = (event: YouTubeEvent) => {
       playerRef.current = event.target;
+      iframeRef.current = event.target.getIframe();
       onPlayerReady(event);
     };
 
@@ -71,7 +76,7 @@ const NowPlaying = forwardRef(
 
     return (
       <div className="p-4 h-full flex flex-col">
-        <h2 className="font-press-start text-lg text-accent mb-4">
+        <h2 className="font-press-start text-lg text-primary mb-4">
           Now Playing
         </h2>
         <div className="flex-grow relative w-full border-4 border-primary shadow-retro-lg rounded-lg overflow-hidden">

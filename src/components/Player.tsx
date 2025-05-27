@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Play,
   Pause,
@@ -7,6 +7,7 @@ import {
   Volume2,
   VolumeX,
   Music,
+  PictureInPicture2,
 } from 'lucide-react';
 import usePlayerStore from '../stores/usePlayerStore';
 import { PlayerProps } from '../types';
@@ -32,6 +33,7 @@ const Player: React.FC<PlayerProps> = ({
 
   const progressBarRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
+  const [isPiP, setIsPiP] = useState(false);
 
   useEffect(() => {
     if (!currentVideo) return;
@@ -70,6 +72,14 @@ const Player: React.FC<PlayerProps> = ({
       }
     };
   }, [currentVideo, videoPlayerRef, volume, isMuted, setCurrentTime, setDuration, setIsPlaying]);
+
+  useEffect(() => {
+    return () => {
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture();
+      }
+    };
+  }, []);
 
   const format = (sec: number) => {
     if (isNaN(sec) || sec < 0) return '0:00';
@@ -113,6 +123,23 @@ const Player: React.FC<PlayerProps> = ({
     setIsMuted(!isMuted);
   };
 
+  const togglePiP = async () => {
+    const iframe = videoPlayerRef.current?.getIframe();
+    if (!iframe) return;
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiP(false);
+      } else {
+        await (iframe as unknown as HTMLVideoElement).requestPictureInPicture();
+        setIsPiP(true);
+      }
+    } catch (err) {
+      console.error('PiP failed:', err);
+    }
+  };
+
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     const bar = progressBarRef.current;
     const pl = videoPlayerRef.current;
@@ -144,7 +171,7 @@ const Player: React.FC<PlayerProps> = ({
           <div
             ref={progressBarRef}
             onClick={seek}
-            className="h-4 bg-secondary mb-1 cursor-pointer rounded-full overflow-hidden shadow-retro"
+            className="h-4 bg-white mb-1 cursor-pointer rounded-full overflow-hidden shadow-retro"
           >
             <div
               className="h-full bg-accent transition-all duration-200"
@@ -164,19 +191,19 @@ const Player: React.FC<PlayerProps> = ({
               <button
                 onClick={onPrevVideo}
                 disabled={!currentVideo}
-                className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50"
+                className="bg-white p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro disabled:opacity-50"
               >
                 <SkipBack className="w-5 h-5" />
               </button>
               <button
                 onClick={togglePlay}
-                className="bg-accent p-3 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
+                className="bg-white p-3 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
               >
                 {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </button>
               <button
                 onClick={onNextVideo}
-                className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
+                className="bg-white p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
               >
                 <SkipForward className="w-5 h-5" />
               </button>
@@ -184,7 +211,7 @@ const Player: React.FC<PlayerProps> = ({
             <div className="flex items-center">
               <button
                 onClick={toggleMute}
-                className="bg-accent p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
+                className="bg-white p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"
               >
                 {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
@@ -194,8 +221,17 @@ const Player: React.FC<PlayerProps> = ({
                 max="100"
                 value={volume}
                 onChange={changeVolume}
-                className="w-24 accent-accent cursor-pointer"
+                className="w-24 accent-white cursor-pointer mr-2"
               />
+              <button
+                onClick={togglePiP}
+                className={`bg-white p-2 rounded-full transition hover:bg-opacity-80 active:translate-y-1 shadow-retro ${
+                  isPiP ? 'bg-accent text-white' : ''
+                }`}
+                title={isPiP ? 'Exit Picture in Picture' : 'Enter Picture in Picture'}
+              >
+                <PictureInPicture2 className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>

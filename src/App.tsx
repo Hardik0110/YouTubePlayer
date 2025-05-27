@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -11,8 +11,8 @@ import CategoryBar from './components/CategoryBar';
 import QueueList from './components/QueueList';
 
 import useStore from './stores/store';
-import { VideoPlayerRef, VideoItem } from './types';
-import { searchVideos } from './services/youtubeApi';
+import { VideoPlayerRef } from './types';
+import { useVideoSearch } from './hooks/useVideoSearch';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,104 +25,57 @@ const queryClient = new QueryClient({
 });
 
 function App(): JSX.Element {
+  const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  
+  // Store state
   const {
     currentVideo,
     searchTerm,
     queueVideos,
-    handleSearch,
     selectVideo,
     addToQueue,
     removeFromQueue,
     playNextVideo,
     playPrevVideo,
-    setVideos: storeSetVideos,
-    setIsLoading: storeSetIsLoading,
   } = useStore();
 
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [categoryVideos, setCategoryVideos] = useState<VideoItem[]>([]);
-  const [isLoading] = useState(false);
-  const [ setLastVideoRef] = useState<((ref: (node: HTMLDivElement | null) => void) => void) | undefined>(undefined);
-  const [searchResults, setSearchResults] = useState<VideoItem[]>([]);
-
-  const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  // Custom hook for video search logic
+  const {
+    activeCategory,
+    categoryVideos,
+    searchResults,
+    isLoading,
+    handleCategorySelect,
+    handleSearch,
+  } = useVideoSearch();
 
   const handlePlayerReady = (): void => {
-    // no-op
-  };
-
-  const handleCategorySelect = async (category: string) => {
-    try {
-      storeSetIsLoading(true); // Use the store's setIsLoading
-      setActiveCategory(category);
-      const results = await searchVideos(category);
-      if (results) {
-        setCategoryVideos(results);
-        storeSetVideos(results);
-      }
-    } catch (error) {
-      console.error('Error fetching category videos:', error);
-    } finally {
-      storeSetIsLoading(false);
-    }
-  };
-
-  const handleSearchWrapper = async (term: string) => {
-    try {
-      storeSetIsLoading(true);
-      setActiveCategory(null);
-      setCategoryVideos([]);
-      
-      const results = await searchVideos(term);
-      if (results) {
-        setSearchResults(results); // Store search results
-        storeSetVideos(results);
-      }
-      handleSearch(term);
-    } catch (error) {
-      console.error('Error searching videos:', error);
-      setSearchResults([]); // Clear results on error
-    } finally {
-      storeSetIsLoading(false);
-    }
+    // Player ready callback 
   };
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        onReset={() => {
-          useStore.setState({ error: null });
-          window.location.reload();
-        }}
-      >
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
         <div className="flex flex-col h-screen">
-          <Header onSearch={handleSearchWrapper} />
+          <Header onSearch={handleSearch} />
           <CategoryBar 
             onCategorySelect={handleCategorySelect} 
             activeCategory={activeCategory}
-            onVideosLoaded={setCategoryVideos}
-            setIsLoading={storeSetIsLoading}
           />
           
           <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-            <div className="w-full lg:w-1/4 border-r-4 border-secondary overflow-y-auto">
-              <VideoLibrary
-                currentVideo={currentVideo}
-                searchTerm={searchTerm}
-                searchResults={searchResults} // Add this prop
-                onSelectVideo={selectVideo}
-                onAddToQueue={addToQueue}
-                onVideosLoaded={storeSetVideos}
-                setIsLoading={storeSetIsLoading}
-                onLastVideoRef={setLastVideoRef}
-                categoryVideos={categoryVideos}
-                activeCategory={activeCategory}
-                isLoadingCategory={isLoading}
-              />
-            </div>
+            <VideoLibrary
+              currentVideo={currentVideo}
+              searchTerm={searchTerm}
+              searchResults={searchResults}
+              categoryVideos={categoryVideos}
+              activeCategory={activeCategory}
+              isLoading={isLoading}
+              onSelectVideo={selectVideo}
+              onAddToQueue={addToQueue}
+            />
 
-            <div className="w-full lg:w-2/4 overflow-hidden border-r-4 border-secondary">
+            <div className="w-full lg:w-1/3 border-r border-secondary/30">
               <NowPlaying
                 ref={videoPlayerRef}
                 currentVideo={currentVideo}
@@ -130,7 +83,7 @@ function App(): JSX.Element {
               />
             </div>
 
-            <div className="w-full lg:w-1/4 overflow-y-auto">
+            <div className="w-full lg:w-1/3">
               <QueueList
                 queueVideos={queueVideos}
                 currentVideo={currentVideo}
@@ -140,14 +93,12 @@ function App(): JSX.Element {
             </div>
           </main>
 
-          <div className="sticky bottom-0 left-0 right-0 z-10">
-            <Player
-              currentVideo={currentVideo}
-              onPrevVideo={playPrevVideo}
-              onNextVideo={playNextVideo}
-              videoPlayerRef={videoPlayerRef}
-            />
-          </div>
+          <Player
+            currentVideo={currentVideo}
+            onPrevVideo={playPrevVideo}
+            onNextVideo={playNextVideo}
+            videoPlayerRef={videoPlayerRef}
+          />
         </div>
       </ErrorBoundary>
     </QueryClientProvider>
