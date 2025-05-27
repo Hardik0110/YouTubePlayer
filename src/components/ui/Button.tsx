@@ -1,107 +1,78 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import styled from 'styled-components';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  varColors?: Record<string, string>;
+interface ButtonProps {
+  children: ReactNode;
+  variant?: string;
+  scheme?: 1 | 2 | 3 | 4;
+  isActive?: boolean;
+  className?: string;
+  onClick?: () => void;
 }
 
-const Button: React.FC<ButtonProps> = ({ varColors, className, children, ...rest }) => (
-  <StyledWrapper style={varColors} className={className}>
-    <button className="button" {...rest}>
-      <div><span>{children}</span></div>
-    </button>
-  </StyledWrapper>
-);
+const Button: React.FC<ButtonProps> = ({ 
+  children, 
+  variant, 
+  scheme = 1, 
+  isActive, 
+  className = '', 
+  onClick 
+}) => {
+  return (
+    <StyledWrapper 
+      $variant={variant} 
+      $scheme={scheme} 
+      $isActive={isActive} 
+      className={className}
+    >
+      <button onClick={onClick}>
+        {children}
+      </button>
+    </StyledWrapper>
+  );
+}
 
-const StyledWrapper = styled.div`
-  .button {
-    --stone-50: #fafaf9;
-    --stone-800: #292524;
-    --yellow-400: #facc15;
-
-    font-size: 1rem;
-    cursor: pointer;
+const StyledWrapper = styled.div<{ $variant?: string; $scheme?: number; $isActive?: boolean; }>`
+  button {
     position: relative;
-    font-family: "Rubik", sans-serif;
+    border: none;
+    padding: ${props => props.$variant === 'category' ? '0.5em 1em' : '1em'};
     font-weight: bold;
-    line-height: 1;
-    padding: 1px;
-    transform: translate(-4px, -4px);
-    outline: 2px solid transparent;
-    outline-offset: 5px;
-    border-radius: 9999px;
-    background-color: var(--stone-800);
-    color: var(--stone-800);
-    transition:
-      transform 150ms ease,
-      box-shadow 150ms ease;
-    text-align: center;
-    box-shadow:
-      0.5px 0.5px 0 0 var(--stone-800),
-      1px 1px 0 0 var(--stone-800),
-      2px 2px 0 0 var(--stone-800),
-      3px 3px 0 0 var(--stone-800),
-      0 0 0 2px var(--stone-50);
-
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border-radius: 5px;
+    letter-spacing: 3px;
+    font-size: ${props => props.$variant === 'category' ? '0.9em' : '1em'};
+    
+    ${props => props.$variant === 'category' ? `
+      background: ${props.$isActive ? '#DA1212' : '#041562'};
+      color: ${props.$isActive ? '#11468F' : '#DA1212'};
+      border: 3px solid ${props.$isActive ? '#11468F' : '#DA1212'};
+      min-width: 100px;
+      transform: ${props.$isActive ? 'scale(1.05)' : 'scale(1)'};
+      opacity: ${props.$isActive ? '1' : '0.9'};
+    ` : `
+      --bg:rgb(255, 25, 0);
+      --text-color: #fff;
+      background: var(--bg);
+      color: var(--text-color);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: #c0392b 0px 4px 2px, #000 0px 4px 3px;
+    `}
+    
     &:hover {
-      transform: translate(0, 0);
-      box-shadow: 0 0 0 2px var(--stone-50);
+      opacity: 1;
+      transform: ${props => props.$variant === 'category' && props.$isActive ? 'scale(1.05)' : 'scale(1.02)'};
     }
 
-    &:active,
-    &:focus-visible {
-      outline-color: var(--yellow-400);
+    &:active {
+      transform: ${props => props.$variant === 'category' ? 'scale(0.98)' : 'translateY(2px)'};
+      box-shadow: ${props => props.$variant !== 'category' && '#c0392b 0px 2px 2px, #000 0px 2px 3px'};
     }
-
-    &:focus-visible {
-      outline-style: dashed;
-    }
-
-    & > div {
-      position: relative;
-      pointer-events: none;
-      background-color: var(--yellow-400);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 9999px;
-
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 9999px;
-        opacity: 0.5;
-        background-image: radial-gradient(
-            rgb(255 255 255 / 80%) 20%,
-            transparent 20%
-          ),
-          radial-gradient(rgb(255 255 255 / 100%) 20%, transparent 20%);
-        background-position:
-          0 0,
-          4px 4px;
-        background-size: 8px 8px;
-        mix-blend-mode: hard-light;
-        animation: dots 0.5s infinite linear;
-      }
-
-      & > span {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.75rem 1.25rem;
-        gap: 0.25rem;
-        filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.25));
-
-        &:active {
-          transform: translateY(2px);
-        }
-      }
-    }
-  }
-
-  @keyframes dots {
-    0% { background-position: 0 0, 4px 4px; }
-    100% { background-position: 8px 0, 12px 4px; }
   }
 `;
 

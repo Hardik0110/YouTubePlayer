@@ -13,23 +13,6 @@ const categories = [
   'Sad', 'Energize', 'Party', 'Chill', 'Workout'
 ];
 
-const presets: Record<string, Record<string, string>> = categories.reduce((acc, label, i) => {
-  const colors = [
-    { '--stone-800': '#3A59D1', '--stone-50': '#7AC6D2', '--yellow-400': '#B5FCCD' },
-    { '--stone-800': '#3D90D7', '--stone-50': '#B5FCCD', '--yellow-400': '#3A59D1' },
-    { '--stone-800': '#7AC6D2', '--stone-50': '#3A59D1', '--yellow-400': '#3D90D7' },
-    { '--stone-800': '#B5FCCD', '--stone-50': '#3D90D7', '--yellow-400': '#7AC6D2' }
-  ];
-  acc[label] = colors[i % colors.length];
-  return acc;
-}, {} as Record<string, Record<string, string>>);
-
-const activeColors: Record<string, string> = {
-  '--stone-800': '#2707f2',
-  '--stone-50': '#e0e5ff',
-  '--yellow-400': '#d1d9ff'
-};
-
 const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCategory }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -41,29 +24,28 @@ const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCateg
 
   return (
     <div className="bg-secondary/50 backdrop-blur-sm border-b border-secondary/30">
-      <div className="container mx-auto px-4 flex items-center relative">
-        <button
+      <div className="container mx-auto px-2 flex items-center relative">
+        <Button
           onClick={() => scroll(-200)}
-          className="p-2 rounded-full border-2 border-white bg-accent hover:bg-muted/80 transition-colors"
+          className="p-1"
         >
-          <ChevronLeft size={20} />
-        </button>
+          <ChevronLeft size={24} />
+        </Button>
 
         <div
           ref={scrollRef}
           className="flex items-center space-x-2 py-3 overflow-x-auto scrollbar-hide mx-2"
         >
-          {categories.map(label => {
+          {categories.map((label, index) => {
             const isActive = activeCategory === label;
-            const varColors = isActive ? activeColors : presets[label];
             return (
               <Button
                 key={label}
+                variant="category"
+                scheme={(index % 4 + 1) as 1 | 2 | 3 | 4}
+                isActive={isActive}
                 onClick={() => onCategorySelect(label)}
-                varColors={varColors}
-                className={`flex items-center space-x-2 text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                  isActive ? '' : 'opacity-80 hover:opacity-100'
-                }`}
+                className="flex items-center space-x-2 text-md font-large transition-all duration-200 whitespace-nowrap"
               >
                 <Music className="w-4 h-4" />
                 <span>{label}</span>
@@ -72,12 +54,12 @@ const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCateg
           })}
         </div>
 
-        <button
+        <Button
           onClick={() => scroll(200)}
-          className="p-2 rounded-full border-2 border-white bg-accent hover:bg-muted/80 transition-colors"
+          className="p-1"
         >
-          <ChevronRight size={20} />
-        </button>
+          <ChevronRight size={24} />
+        </Button>
       </div>
     </div>
   );
