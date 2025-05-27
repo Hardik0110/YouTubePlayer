@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import { SearchResponse, VideoDetailResponse, VideoItem } from '../types';
 
-const API_KEY = 'AIzaSyAYczYJhbB6_pkwy7va2Dm6S3BcGcZrAMo';
+const API_KEY = 'AIzaSyAHWqMYjoeWtPO6TDnjHagPJ2nbe_x7KiI';
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
 // API request timeout in milliseconds

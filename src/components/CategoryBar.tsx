@@ -1,10 +1,14 @@
 import React, { useRef } from 'react';
 import { ChevronLeft, ChevronRight, Music } from 'lucide-react';
 import Button from './ui/Button';
+import { searchVideos } from '../services/youtubeApi';
+import { VideoItem } from '../types';
 
 interface CategoryBarProps {
   onCategorySelect: (category: string) => void;
   activeCategory: string | null;
+  onVideosLoaded: (videos: VideoItem[]) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const categories = [
@@ -13,11 +17,32 @@ const categories = [
   'Sad', 'Energize', 'Party', 'Chill', 'Workout'
 ];
 
-const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCategory }) => {
+const CategoryBar: React.FC<CategoryBarProps> = ({ 
+  onCategorySelect, 
+  activeCategory,
+  onVideosLoaded,
+  setIsLoading 
+}) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleCategoryClick = (category: string) => {
-    onCategorySelect(`${category} music`); // Add 'music' to make search more relevant
+  const handleCategoryClick = async (category: string) => {
+    try {
+      if (typeof setIsLoading === 'function') {
+        setIsLoading(true);
+      }
+      const categoryQuery = `${category} music`;
+      onCategorySelect(categoryQuery);
+      const videos = await searchVideos(categoryQuery);
+      if (videos && onVideosLoaded) {
+        onVideosLoaded(videos);
+      }
+    } catch (error) {
+      console.error('Error fetching category videos:', error);
+    } finally {
+      if (typeof setIsLoading === 'function') {
+        setIsLoading(false);
+      }
+    }
   };
 
   const scroll = (offset: number) => {
@@ -40,13 +65,12 @@ const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCateg
           ref={scrollRef}
           className="flex items-center space-x-2 py-3 overflow-x-auto scrollbar-hide mx-2"
         >
-          {categories.map((label, index) => {
-            const isActive = activeCategory === label;
+          {categories.map((label) => {
+            const isActive = activeCategory === `${label} music`;
             return (
               <Button
                 key={label}
                 variant="category"
-                scheme={(index % 4 + 1) as 1 | 2 | 3 | 4}
                 isActive={isActive}
                 onClick={() => handleCategoryClick(label)}
                 className="flex items-center space-x-2 whitespace-nowrap"

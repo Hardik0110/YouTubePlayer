@@ -9,24 +9,31 @@ interface VideoLibraryProps {
   onAddToQueue: (video: VideoItemType) => void;
   currentVideo: VideoItemType | null;
   searchTerm: string;
+  searchResults?: VideoItemType[];
   onVideosLoaded?: (videos: VideoItemType[]) => void;
   setIsLoading?: (loading: boolean) => void;
   onLastVideoRef?: (ref: (node: HTMLDivElement | null) => void) => void;
+  categoryVideos?: VideoItemType[];
+  activeCategory?: string | null;
+  isLoadingCategory?: boolean;
 }
 
 interface VideoPage {
   videos: VideoItemType[];
   nextPageToken?: string;
 }
-
 const VideoLibrary: React.FC<VideoLibraryProps> = ({
   onSelectVideo,
   onAddToQueue,
   currentVideo,
   searchTerm,
+  searchResults = [],
   onVideosLoaded,
   setIsLoading,
-  onLastVideoRef
+  onLastVideoRef,
+  categoryVideos = [],
+  activeCategory,
+  isLoadingCategory = false
 }) => {
   const observer = useRef<IntersectionObserver | null>(null);
   
@@ -39,13 +46,26 @@ const VideoLibrary: React.FC<VideoLibraryProps> = ({
     error
   } = useTrendingVideos();
 
-  const videos = useMemo(() => 
+  const trendingVideos = useMemo(() => 
     (Array.isArray(data?.pages) ? data.pages as VideoPage[] : []).flatMap((page: VideoPage) => page.videos),
     [data?.pages]
   );
 
+  // Update the videos memo to include search results
+  const videos = useMemo(() => {
+    if (searchTerm && searchResults && searchResults.length > 0) {
+      return searchResults;
+    }
+    if (activeCategory && categoryVideos.length > 0) {
+      return categoryVideos;
+    }
+    return trendingVideos;
+  }, [searchTerm, searchResults, activeCategory, categoryVideos, trendingVideos]);
+
+  const shouldShowInfiniteScroll = !activeCategory && !searchTerm;
+
   const lastVideoRef = useCallback((node: HTMLDivElement | null) => {
-    if (isFetching) return;
+    if (isFetching || !shouldShowInfiniteScroll) return;
     
     if (observer.current) {
       observer.current.disconnect();
@@ -60,7 +80,7 @@ const VideoLibrary: React.FC<VideoLibraryProps> = ({
     if (node) {
       observer.current.observe(node);
     }
-  }, [fetchNextPage, hasNextPage, isFetching]);
+  }, [fetchNextPage, hasNextPage, isFetching, shouldShowInfiniteScroll]);
 
   // Provide lastVideoRef to parent component if callback exists
   useEffect(() => {
@@ -79,15 +99,25 @@ const VideoLibrary: React.FC<VideoLibraryProps> = ({
   // Update parent with loading state
   useEffect(() => {
     if (setIsLoading) {
-      setIsLoading(isLoading || isFetching);
+      setIsLoading(isLoading || isFetching || isLoadingCategory);
     }
-  }, [isLoading, isFetching, setIsLoading]);
+  }, [isLoading, isFetching, isLoadingCategory, setIsLoading]);
+
+  const getHeaderText = () => {
+    if (activeCategory) {
+      return `${activeCategory} Music`;
+    }
+    if (searchTerm) {
+      return 'Search Results';
+    }
+    return 'Trending Videos';
+  };
 
   const renderEmptyState = () => (
     <div className="flex flex-col items-center justify-center h-full p-4">
       <Music className="w-12 h-12 text-accent mb-4" />
       <p className="text-center text-white">
-        {searchTerm ? 'No videos found' : 'Loading trending videos...'}
+        {activeCategory || searchTerm ? 'No videos found' : 'Loading trending videos...'}
       </p>
     </div>
   );
@@ -109,7 +139,7 @@ const VideoLibrary: React.FC<VideoLibraryProps> = ({
   const renderVideoItem = (video: VideoItemType, index: number) => (
     <div
       key={video.id}
-      ref={index === videos.length - 1 ? lastVideoRef : undefined}
+      ref={index === videos.length - 1 && shouldShowInfiniteScroll ? lastVideoRef : undefined}
       className="mb-4 relative group"
     >
       <VideoItem
@@ -131,23 +161,34 @@ const VideoLibrary: React.FC<VideoLibraryProps> = ({
     </div>
   );
 
-  if (error) {
+  if (error && !activeCategory) {
     return renderErrorState();
   }
 
-  if (!videos.length && !isLoading) {
+  if (!videos.length && (isLoading || isLoadingCategory)) {
+    return (
+      <div className="p-4">
+        <h2 className="text-accent font-press-start text-lg mb-4">
+          {getHeaderText()}
+        </h2>
+        {renderLoadingSpinner()}
+      </div>
+    );
+  }
+
+  if (!videos.length) {
     return renderEmptyState();
   }
 
   return (
     <div className="p-4">
       <h2 className="text-accent font-press-start text-lg mb-4">
-        {searchTerm ? 'Search Results' : 'Trending Videos'}
+        {getHeaderText()}
       </h2>
       
       {videos.map(renderVideoItem)}
       
-      {(isLoading || isFetching) && renderLoadingSpinner()}
+      {shouldShowInfiniteScroll && (isLoading || isFetching) && renderLoadingSpinner()}
     </div>
   );
 };

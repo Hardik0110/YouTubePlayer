@@ -18,32 +18,13 @@ export default {
           active: 'rgba(76, 201, 240, 0.25)'// vivid-sky-blue with opacity
         },
         category: {
-          schemes: {
-            1: { 
-              base: '#3A0CA3',    // zaffre
-              light: '#4CC9F0',   // vivid-sky-blue
-              accent: '#F72585'   // rose
-            },
-            2: { 
-              base: '#560BAD',    // chrysler-blue
-              light: '#4895EF',   // chefchaouen-blue
-              accent: '#B5179E'   // fandango
-            },
-            3: { 
-              base: '#F72585',    // rose
-              light: '#4CC9F0',   // vivid-sky-blue
-              accent: '#3F37C9'   // palatinate-blue
-            },
-            4: { 
-              base: '#480CA8',    // dark-blue
-              light: '#4361EE',   // neon-blue
-              accent: '#7209B7'   // grape
-            }
-          },
+          base: '#3A0CA3',    // zaffre
+          light: '#4CC9F0',   // vivid-sky-blue
+          accent: '#F72585',   // rose
           active: {
-            base: '#F72585',      // rose
-            light: '#4CC9F0',     // vivid-sky-blue
-            accent: '#3A0CA3'     // zaffre
+            base: '#F72585',    // rose
+            light: '#4CC9F0',   // vivid-sky-blue
+            accent: '#3A0CA3'   // zaffre
           }
         }
       },

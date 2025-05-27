@@ -11,7 +11,7 @@ import CategoryBar from './components/CategoryBar';
 import QueueList from './components/QueueList';
 
 import useStore from './stores/store';
-import { VideoPlayerRef } from './types';
+import { VideoPlayerRef, VideoItem } from './types';
 import { searchVideos } from './services/youtubeApi';
 
 const queryClient = new QueryClient({
@@ -37,11 +37,13 @@ function App(): JSX.Element {
     playPrevVideo,
     setVideos: storeSetVideos,
     setIsLoading: storeSetIsLoading,
-    setLastVideoRef,
   } = useStore();
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [categoryVideos, setCategoryVideos] = useState<VideoItem[]>([]);
+  const [isLoading] = useState(false);
+  const [ setLastVideoRef] = useState<((ref: (node: HTMLDivElement | null) => void) => void) | undefined>(undefined);
+  const [searchResults, setSearchResults] = useState<VideoItem[]>([]);
 
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
 
@@ -51,16 +53,37 @@ function App(): JSX.Element {
 
   const handleCategorySelect = async (category: string) => {
     try {
-      setIsLoading(true);
-      setIsLoading(true);
+      storeSetIsLoading(true); // Use the store's setIsLoading
       setActiveCategory(category);
       const results = await searchVideos(category);
       if (results) {
-        storeSetVideos(results.videos);
+        setCategoryVideos(results);
+        storeSetVideos(results);
       }
+    } catch (error) {
       console.error('Error fetching category videos:', error);
     } finally {
-      setIsLoading(false);
+      storeSetIsLoading(false);
+    }
+  };
+
+  const handleSearchWrapper = async (term: string) => {
+    try {
+      storeSetIsLoading(true);
+      setActiveCategory(null);
+      setCategoryVideos([]);
+      
+      const results = await searchVideos(term);
+      if (results) {
+        setSearchResults(results); // Store search results
+        storeSetVideos(results);
+      }
+      handleSearch(term);
+    } catch (error) {
+      console.error('Error searching videos:', error);
+      setSearchResults([]); // Clear results on error
+    } finally {
+      storeSetIsLoading(false);
     }
   };
 
@@ -74,19 +97,28 @@ function App(): JSX.Element {
         }}
       >
         <div className="flex flex-col h-screen">
-          <Header onSearch={handleSearch} />
-          <CategoryBar onCategorySelect={handleCategorySelect} activeCategory={activeCategory} />
+          <Header onSearch={handleSearchWrapper} />
+          <CategoryBar 
+            onCategorySelect={handleCategorySelect} 
+            activeCategory={activeCategory}
+            onVideosLoaded={setCategoryVideos}
+            setIsLoading={storeSetIsLoading}
+          />
           
           <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             <div className="w-full lg:w-1/4 border-r-4 border-secondary overflow-y-auto">
               <VideoLibrary
                 currentVideo={currentVideo}
                 searchTerm={searchTerm}
+                searchResults={searchResults} // Add this prop
                 onSelectVideo={selectVideo}
                 onAddToQueue={addToQueue}
                 onVideosLoaded={storeSetVideos}
                 setIsLoading={storeSetIsLoading}
                 onLastVideoRef={setLastVideoRef}
+                categoryVideos={categoryVideos}
+                activeCategory={activeCategory}
+                isLoadingCategory={isLoading}
               />
             </div>
 
