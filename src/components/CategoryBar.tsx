@@ -16,6 +16,10 @@ const categories = [
 const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCategory }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const handleCategoryClick = (category: string) => {
+    onCategorySelect(`${category} music`); // Add 'music' to make search more relevant
+  };
+
   const scroll = (offset: number) => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
@@ -27,7 +31,7 @@ const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCateg
       <div className="container mx-auto px-2 flex items-center relative">
         <Button
           onClick={() => scroll(-200)}
-          className="p-1"
+          className="p-1 bg-button-base text-button-text hover:bg-button-hover"
         >
           <ChevronLeft size={24} />
         </Button>
@@ -44,8 +48,8 @@ const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCateg
                 variant="category"
                 scheme={(index % 4 + 1) as 1 | 2 | 3 | 4}
                 isActive={isActive}
-                onClick={() => onCategorySelect(label)}
-                className="flex items-center space-x-2 text-md font-large transition-all duration-200 whitespace-nowrap"
+                onClick={() => handleCategoryClick(label)}
+                className="flex items-center space-x-2 whitespace-nowrap"
               >
                 <Music className="w-4 h-4" />
                 <span>{label}</span>
@@ -56,7 +60,7 @@ const CategoryBar: React.FC<CategoryBarProps> = ({ onCategorySelect, activeCateg
 
         <Button
           onClick={() => scroll(200)}
-          className="p-1"
+          className="p-1 bg-button-base text-button-text hover:bg-button-hover"
         >
           <ChevronRight size={24} />
         </Button>

@@ -5,51 +5,52 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#041562',   // midnight blue
-        secondary: '#11468F', // deep ocean blue
-        accent: '#DA1212',    // vivid red
-        background: '#000000',// light gray
-        textColor: '#11468F', // deep ocean blue
+        primary: '#3A0CA3',    // zaffre (main brand color)
+        secondary: '#4361EE',  // neon-blue
+        accent: '#F72585',     // rose (vibrant accent)
+        background: '#000000', // black
+        textColor: '#4CC9F0',  // vivid-sky-blue
         button: {
-          base: '#292524',    // stone-800
-          text: '#DA1212',    // stone-50
-          highlight: '#facc15',// yellow-400
-          hover: 'rgba(255, 255, 255, 0.3)',
-          active: 'rgba(255, 255, 255, 0.25)'
+          base: '#7209B7',       // grape
+          text: '#4CC9F0',       // vivid-sky-blue
+          highlight: '#F72585',   // rose
+          hover: 'rgba(76, 201, 240, 0.3)', // vivid-sky-blue with opacity
+          active: 'rgba(76, 201, 240, 0.25)'// vivid-sky-blue with opacity
         },
         category: {
           schemes: {
             1: { 
-              base: '#041562',    // primary
-              light: '#DA1212',   // changed to red
-              accent: '#DA1212'   // accent
+              base: '#3A0CA3',    // zaffre
+              light: '#4CC9F0',   // vivid-sky-blue
+              accent: '#F72585'   // rose
             },
             2: { 
-              base: '#11468F',    // secondary
-              light: '#DA1212',   // changed to red
-              accent: '#DA1212'   // accent
+              base: '#560BAD',    // chrysler-blue
+              light: '#4895EF',   // chefchaouen-blue
+              accent: '#B5179E'   // fandango
             },
             3: { 
-              base: '#DA1212',    // accent
-              light: '#DA1212',   // changed to red
-              accent: '#041562'   // primary
+              base: '#F72585',    // rose
+              light: '#4CC9F0',   // vivid-sky-blue
+              accent: '#3F37C9'   // palatinate-blue
             },
             4: { 
-              base: '#292524',    // button base
-              light: '#DA1212',   // changed to red
-              accent: '#DA1212'   // accent
+              base: '#480CA8',    // dark-blue
+              light: '#4361EE',   // neon-blue
+              accent: '#7209B7'   // grape
             }
           },
           active: {
-            base: '#DA1212',      // accent
-            light: '#DA1212',     // changed to red
-            accent: '#041562'     // primary
+            base: '#F72585',      // rose
+            light: '#4CC9F0',     // vivid-sky-blue
+            accent: '#3A0CA3'     // zaffre
           }
         }
       },
       backgroundImage: {
-        'gradient-primary': 'linear-gradient(to right, #041562, #11468F)',
-        'gradient-accent':  'linear-gradient(to right, #DA1212,rgb(0, 0, 0))',
+        'gradient-primary': 'linear-gradient(to right, #3A0CA3, #4361EE)',
+        'gradient-accent': 'linear-gradient(to right, #F72585, #4CC9F0)',
+        'gradient-rainbow': 'linear-gradient(45deg, #F72585, #B5179E, #7209B7, #560BAD, #480CA8, #3A0CA3, #3F37C9, #4361EE, #4895EF, #4CC9F0)',
       },
       fontFamily: {
         'press-start': ['"Press Start 2P"', 'cursive'],
@@ -71,6 +72,12 @@ export default {
         retro: '4px 4px 0px rgba(0, 0, 0, 0.2)',
         'retro-lg': '8px 8px 0px rgba(0, 0, 0, 0.2)',
       },
+      borderWidth: {
+        '3': '3px',
+      },
+      scale: {
+        '102': '1.02',
+      }
     },
   },
   plugins: [],

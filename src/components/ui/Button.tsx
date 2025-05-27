@@ -1,9 +1,8 @@
 import React, { ReactNode } from 'react';
-import styled from 'styled-components';
 
 interface ButtonProps {
   children: ReactNode;
-  variant?: string;
+  variant?: 'category' | 'default';
   scheme?: 1 | 2 | 3 | 4;
   isActive?: boolean;
   className?: string;
@@ -12,68 +11,49 @@ interface ButtonProps {
 
 const Button: React.FC<ButtonProps> = ({ 
   children, 
-  variant, 
+  variant = 'default', 
   scheme = 1, 
-  isActive, 
+  isActive = false, 
   className = '', 
   onClick 
 }) => {
+  const getVariantClasses = () => {
+    if (variant === 'category') {
+      const schemeClasses = {
+        1: 'bg-category-schemes-1-base text-category-schemes-1-light border-category-schemes-1-accent',
+        2: 'bg-category-schemes-2-base text-category-schemes-2-light border-category-schemes-2-accent',
+        3: 'bg-category-schemes-3-base text-category-schemes-3-light border-category-schemes-3-accent',
+        4: 'bg-category-schemes-4-base text-category-schemes-4-light border-category-schemes-4-accent'
+      };
+
+      const activeClasses = 'bg-category-active-base text-category-active-light border-category-active-accent transform scale-105 opacity-100';
+      const inactiveClasses = `${schemeClasses[scheme]} opacity-90`;
+      
+      return `
+        px-4 py-2 font-bold uppercase transition-all duration-200 rounded-md 
+        border-3 min-w-[100px] text-sm tracking-wide
+        hover:opacity-100 hover:scale-102 active:scale-98
+        ${isActive ? activeClasses : inactiveClasses}
+      `;
+    }
+
+    return `
+      bg-button-base text-button-text w-12 h-12 font-bold uppercase 
+      transition-all duration-200 rounded-md flex items-center justify-center
+      shadow-[0_4px_2px_theme(colors.red.600),0_4px_3px_theme(colors.black)]
+      hover:opacity-100 hover:scale-102 
+      active:translate-y-0.5 active:shadow-[0_2px_2px_theme(colors.red.600),0_2px_3px_theme(colors.black)]
+    `;
+  };
+
   return (
-    <StyledWrapper 
-      $variant={variant} 
-      $scheme={scheme} 
-      $isActive={isActive} 
-      className={className}
+    <button 
+      onClick={onClick}
+      className={`${getVariantClasses()} ${className}`}
     >
-      <button onClick={onClick}>
-        {children}
-      </button>
-    </StyledWrapper>
+      {children}
+    </button>
   );
-}
-
-const StyledWrapper = styled.div<{ $variant?: string; $scheme?: number; $isActive?: boolean; }>`
-  button {
-    position: relative;
-    border: none;
-    padding: ${props => props.$variant === 'category' ? '0.5em 1em' : '1em'};
-    font-weight: bold;
-    text-transform: uppercase;
-    transition: all 0.2s;
-    border-radius: 5px;
-    letter-spacing: 3px;
-    font-size: ${props => props.$variant === 'category' ? '0.9em' : '1em'};
-    
-    ${props => props.$variant === 'category' ? `
-      background: ${props.$isActive ? '#DA1212' : '#041562'};
-      color: ${props.$isActive ? '#11468F' : '#DA1212'};
-      border: 3px solid ${props.$isActive ? '#11468F' : '#DA1212'};
-      min-width: 100px;
-      transform: ${props.$isActive ? 'scale(1.05)' : 'scale(1)'};
-      opacity: ${props.$isActive ? '1' : '0.9'};
-    ` : `
-      --bg:rgb(255, 25, 0);
-      --text-color: #fff;
-      background: var(--bg);
-      color: var(--text-color);
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: #c0392b 0px 4px 2px, #000 0px 4px 3px;
-    `}
-    
-    &:hover {
-      opacity: 1;
-      transform: ${props => props.$variant === 'category' && props.$isActive ? 'scale(1.05)' : 'scale(1.02)'};
-    }
-
-    &:active {
-      transform: ${props => props.$variant === 'category' ? 'scale(0.98)' : 'translateY(2px)'};
-      box-shadow: ${props => props.$variant !== 'category' && '#c0392b 0px 2px 2px, #000 0px 2px 3px'};
-    }
-  }
-`;
+};
 
 export default Button;
