@@ -1,13 +1,17 @@
-import React, { useImperativeHandle, forwardRef, Ref, useRef } from 'react';
+import { useImperativeHandle, forwardRef,  useRef, useState } from 'react';
 import YouTube, { YouTubePlayer, YouTubeEvent } from 'react-youtube';
 import { VideoPlayerRef, NowPlayingProps } from '../types';
+import { Monitor, Music2 } from 'lucide-react';
+import usePlayerStore from '../stores/usePlayerStore';
 
-const NowPlaying = forwardRef(
-  ({ currentVideo, onPlayerReady }: NowPlayingProps, ref: Ref<VideoPlayerRef>) => {
+const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
+  ({ currentVideo, onPlayerReady }, ref) => {
     const playerRef = useRef<YouTubePlayer | null>(null);
-    const iframeRef = useRef<HTMLIFrameElement | null>(null);
-    const pipVideoRef = useRef<HTMLVideoElement>(null); 
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isPlayerReady, setIsPlayerReady] = useState(false);
+    const { isVideoMode, setVideoMode } = usePlayerStore();
 
+    // Player API methods
     useImperativeHandle(ref, () => ({
       get player() {
         return playerRef.current;
@@ -17,13 +21,11 @@ const NowPlaying = forwardRef(
       },
       togglePlay() {
         const player = playerRef.current;
-        if (!player) return;
+        if (!player || !isPlayerReady) return;
         
-        if (player.getPlayerState() === 1) {
-          player.pauseVideo();
-        } else {
-          player.playVideo();
-        }
+        return player.getPlayerState() === 1 
+          ? player.pauseVideo() 
+          : player.playVideo();
       },
       getCurrentTime() {
         return playerRef.current?.getCurrentTime() ?? 0;
@@ -46,89 +48,121 @@ const NowPlaying = forwardRef(
       isMuted() {
         return playerRef.current?.isMuted() ?? false;
       },
-      getIframe() {
-        return iframeRef.current;
-      },
-      getPipVideo() {
-        return pipVideoRef.current;
-      },
       captureStream() {
-        const iframe = playerRef.current?.getIframe();
-        if (!iframe || !pipVideoRef.current) return null;
-        
-        const stream = iframe.contentDocument?.body.captureStream();
-        if (stream) {
-          pipVideoRef.current.srcObject = stream;
-        }
-        return pipVideoRef.current;
+        const video = containerRef.current?.querySelector('video');
+        return (video as HTMLVideoElement & { captureStream(): MediaStream })?.captureStream() ?? null;
       }
-    }));
+    }), [isPlayerReady]);
 
     const handleReady = (event: YouTubeEvent) => {
       playerRef.current = event.target;
-      iframeRef.current = event.target.getIframe();
+      setIsPlayerReady(true);
       onPlayerReady(event);
     };
 
-    // const handleStateChange = (event: YouTubeEvent) => {
-    //   onPlayerStateChange(event);
-    // };
+    const toggleVideoMode = () => setVideoMode(!isVideoMode);
 
-    if (!currentVideo) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full p-6 bg-white bg-opacity-50 rounded-lg shadow-retro m-4">
-          <div className="loader mb-3" />
-          <p className="font-press-start text-sm text-textColor text-center">
-            No track selected
-          </p>
-          <p className="font-vt323 text-textColor text-center mt-2">
-            Pick a song from the list to start playing
-          </p>
-        </div>
-      );
-    }
+    // YouTube player options
+    const youtubeOpts = {
+      height: '100%',
+      width: '100%',
+      playerVars: {
+        controls: 0,
+        modestbranding: 1,
+        enablejsapi: 1,
+        origin: window.location.origin,
+      }
+    };
 
     return (
-      <div className="p-4 h-full flex flex-col">
-        <h2 className="font-press-start text-lg text-primary mb-4">
-          Now Playing
-        </h2>
-        <div className="flex-grow relative w-full border-4 border-primary shadow-retro-lg rounded-lg overflow-hidden">
-          <YouTube
-            videoId={currentVideo.id}
-            className="absolute top-0 left-0 w-full h-full"
-            opts={{
-              height: '100%',
-              width: '100%',
-              playerVars: {
-                controls: 0,
-                modestbranding: 1,
-                enablejsapi: 1
-              }
-            }}
-            onReady={handleReady}
-            // onStateChange={handleStateChange}
-          />
-          <video 
-            ref={pipVideoRef}
-            className="hidden"
-            playsInline
-            muted
-          />
+      <div className="p-4 h-full flex flex-col" ref={containerRef}>
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-press-start text-lg text-primary">
+            Now Playing
+          </h2>
+          
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-white">Choose Mode Here - </span>
+            <button
+              onClick={toggleVideoMode}
+              className={`
+                p-2 rounded-full transition-all duration-200 hover:scale-105
+                ${isVideoMode 
+                  ? 'bg-accent text-white shadow-lg' 
+                  : 'bg-white text-accent border-2 border-accent'
+                }
+              `}
+              title={isVideoMode ? 'Switch to audio mode' : 'Switch to video mode'}
+              aria-label={isVideoMode ? 'Switch to audio mode' : 'Switch to video mode'}
+            > 
+              {isVideoMode ? <Monitor size={20} /> : <Music2 size={20} />}
+            </button>
+          </div>
         </div>
-        <div className="mt-4 text-center">
-          <h3 className="font-vt323 text-2xl text-accent font-bold">
-            {currentVideo.title}
-          </h3>
-          <p className="font-vt323 text-lg text-red-700">
-            {currentVideo.channelTitle}
-          </p>
+
+        {/* Player Section */}
+        <div className="flex-grow relative w-full border-4 border-primary shadow-retro-lg rounded-lg overflow-hidden bg-white">
+          {/* Video Mode */}
+          {isVideoMode && (
+            <div className="absolute inset-0">
+              <YouTube
+                videoId={currentVideo?.id}
+                className="w-full h-full"
+                opts={youtubeOpts}
+                onReady={handleReady}
+              />
+            </div>
+          )}
+
+          {/* Audio Mode */}
+          {!isVideoMode && (
+            <div className="w-full h-full flex flex-col items-center justify-center p-8">
+              {currentVideo && (
+                <>
+                  <div className="relative mb-6">
+                    <img
+                      src={currentVideo.thumbnailHigh || currentVideo.thumbnail}
+                      alt={currentVideo.title}
+                      className="w-full h-full object-cover rounded-lg shadow-retro"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
+                  </div>
+                  
+                  <div className="animate-pulse-slow">
+                    <Music2 className="w-8 h-8 text-accent" />
+                  </div>
+                </>
+              )}
+              
+              {/* Hidden YouTube player for audio playback */}
+              <div className="absolute opacity-0 pointer-events-none">
+                <YouTube
+                  videoId={currentVideo?.id}
+                  opts={{ ...youtubeOpts, height: '1', width: '1' }}
+                  onReady={handleReady}
+                />
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Track Info Section */}
+        {currentVideo && (
+          <div className="mt-4 text-center space-y-1">
+            <h3 className="font-vt323 text-2xl text-accent font-bold line-clamp-2">
+              {currentVideo.title}
+            </h3>
+            <p className="font-vt323 text-lg text-primary">
+              {currentVideo.channelTitle}
+            </p>
+          </div>
+        )}
       </div>
     );
   }
-) as React.ForwardRefExoticComponent<
-  React.PropsWithoutRef<NowPlayingProps> & React.RefAttributes<VideoPlayerRef>
->;
+);
+
+NowPlaying.displayName = 'NowPlaying';
 
 export default NowPlaying;

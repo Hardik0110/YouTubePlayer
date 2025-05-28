@@ -119,28 +119,21 @@ export const searchVideos = async (
       return [];
     }
 
-    return detailItems.map(item => {
-      const durationString: string = item.contentDetails.duration || 'PT0S';
-      const viewCountString: string = item.statistics.viewCount || '0';
-      const durationInSeconds: number = parseDurationToSeconds(
-        durationString
-      );
-
-      return {
-        id: item.id,
-        title: item.snippet.title || 'Untitled Video',
-        channelTitle: item.snippet.channelTitle || 'Unknown Channel',
-        thumbnail:
-          item.snippet.thumbnails.high?.url ||
-          item.snippet.thumbnails.medium?.url ||
-          item.snippet.thumbnails.default?.url ||
-          '',
-        duration: formatDuration(durationString),
-        viewCount: formatViewCount(viewCountString),
-        startTime: 0,
-        endTime: durationInSeconds,
-      };
-    });
+    return detailItems.map(item => ({
+      id: item.id,
+      title: item.snippet.title || 'Untitled Video',
+      channelTitle: item.snippet.channelTitle || 'Unknown Channel',
+      thumbnail: item.snippet.thumbnails.medium?.url || '',
+      thumbnailHigh:
+        item.snippet.thumbnails.maxres?.url ||
+        item.snippet.thumbnails.high?.url ||
+        item.snippet.thumbnails.medium?.url ||
+        '',
+      duration: formatDuration(item.contentDetails.duration || 'PT0S'),
+      viewCount: formatViewCount(item.statistics.viewCount || '0'),
+      startTime: 0,
+      endTime: parseDurationToSeconds(item.contentDetails.duration || 'PT0S'),
+    }));
   } catch (error: unknown) {
     handleApiError(error);
   }
@@ -192,6 +185,9 @@ export const getTrendingVideos = async (
         title: item.snippet.title || 'Untitled Video',
         channelTitle: item.snippet.channelTitle || 'Unknown Channel',
         thumbnail: thumbnailUrl,
+        thumbnailHigh: item.snippet.thumbnails.maxres?.url || 
+                      item.snippet.thumbnails.high?.url || 
+                      thumbnailUrl,
         duration: formatDuration(durationString),
         viewCount: formatViewCount(viewCountString),
         startTime: 0,

@@ -8,6 +8,7 @@ export interface VideoItem {
   title: string;             // Video title
   channelTitle: string;      // Name of the channel that published the video
   thumbnail: string;         // URL to the video thumbnail image
+  thumbnailHigh: string;     // Add this for better quality thumbnails in audio mode
   duration: string;          // Formatted duration (e.g. "3:45")
   viewCount: string;         // Formatted view count (e.g. "1.5M views")
   startTime: number;         // Start time for playback in seconds
@@ -28,19 +29,16 @@ export interface PlayerState {
 }
 
 export interface VideoPlayerRef {
-  player: YouTubePlayer | null; // Reference to the actual YouTube player
-  isPlaying(): boolean;      // Check if video is currently playing
-  togglePlay(): void;        // Toggle between play and pause
-  getCurrentTime(): number;  // Get current playback position in seconds
-  getDuration(): number;     // Get total video duration in seconds
-  seekTo(seconds: number): void; // Jump to a specific time in the video
-  setVolume(volume: number): void; // Set player volume (0-100)
-  mute(): void;              // Mute audio
-  unMute(): void;            // Unmute audio
-  isMuted(): boolean;        // Check if audio is muted
-  getIframe(): HTMLIFrameElement | null;
-  getPipVideo(): HTMLVideoElement | null;
-  captureStream(): HTMLVideoElement | null;
+  player: YouTubePlayer | null;
+  isPlaying(): boolean;
+  togglePlay(): void;
+  getCurrentTime(): number;
+  getDuration(): number;
+  seekTo(seconds: number): void;
+  setVolume(volume: number): void;
+  mute(): void;
+  unMute(): void;
+  isMuted(): boolean;
 }
 
 export interface PlayerProps {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Play,
   Pause,
@@ -7,7 +7,6 @@ import {
   Volume2,
   VolumeX,
   Music,
-  PictureInPicture2,
 } from 'lucide-react';
 import usePlayerStore from '../stores/usePlayerStore';
 import { PlayerProps } from '../types';
@@ -33,7 +32,6 @@ const Player: React.FC<PlayerProps> = ({
 
   const progressBarRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
-  const [isPiP, setIsPiP] = useState(false);
 
   useEffect(() => {
     if (!currentVideo) return;
@@ -91,8 +89,13 @@ const Player: React.FC<PlayerProps> = ({
   const togglePlay = () => {
     const pl = videoPlayerRef.current;
     if (!pl) return;
-    pl.togglePlay();
-    setIsPlaying(!isPlaying);
+    
+    try {
+      pl.togglePlay();
+      setIsPlaying(!isPlaying);
+    } catch (error) {
+      console.error('Error toggling play state:', error);
+    }
   };
 
   const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,25 +124,6 @@ const Player: React.FC<PlayerProps> = ({
       pl.mute();
     }
     setIsMuted(!isMuted);
-  };
-
-  const togglePiP = async () => {
-    try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-        setIsPiP(false);
-      } else {
-        const video = videoPlayerRef.current?.getPipVideo();
-        if (!video) return;
-
-        videoPlayerRef.current?.captureStream();
-        await video.requestPictureInPicture();
-        setIsPiP(true);
-      }
-    } catch (err) {
-      console.error('PiP failed:', err);
-      alert('Picture-in-Picture mode is not supported in your browser or requires HTTPS');
-    }
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -187,7 +171,7 @@ const Player: React.FC<PlayerProps> = ({
             <span>{format(currentTime)}</span>
             <span>{format(currentVideo.endTime)}</span>
           </div>
-
+              
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button
@@ -223,17 +207,8 @@ const Player: React.FC<PlayerProps> = ({
                 max="100"
                 value={volume}
                 onChange={changeVolume}
-                className="w-24 accent-white cursor-pointer mr-2"
+                className="w-24 accent-white cursor-pointer"
               />
-              <button
-                onClick={togglePiP}
-                className={`bg-white p-2 rounded-full transition hover:bg-opacity-80 active:translate-y-1 shadow-retro ${
-                  isPiP ? 'bg-accent text-white' : ''
-                }`}
-                title={isPiP ? 'Exit Picture in Picture' : 'Enter Picture in Picture'}
-              >
-                <PictureInPicture2 className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>
