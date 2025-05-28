@@ -6,7 +6,7 @@ interface UseVideoDisplayProps {
   searchResults: VideoItem[];
   categoryVideos: VideoItem[];
   activeCategory: string | null;
-  trendingData: any; 
+  trendingData: { pages: { videos: VideoItem[] }[] }; 
 }
 
 export const useVideoDisplay = ({
@@ -25,7 +25,7 @@ export const useVideoDisplay = ({
     }
     // Handle trending videos
     if (trendingData?.pages) {
-      return trendingData.pages.flatMap(page => page.videos);
+      return trendingData.pages.flatMap((page: { videos: VideoItem[] }) => page.videos);
     }
     return [];
   }, [searchTerm, searchResults, activeCategory, categoryVideos, trendingData]);

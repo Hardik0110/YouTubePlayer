@@ -124,19 +124,21 @@ const Player: React.FC<PlayerProps> = ({
   };
 
   const togglePiP = async () => {
-    const iframe = videoPlayerRef.current?.getIframe();
-    if (!iframe) return;
-
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
         setIsPiP(false);
       } else {
-        await (iframe as unknown as HTMLVideoElement).requestPictureInPicture();
+        const video = videoPlayerRef.current?.getPipVideo();
+        if (!video) return;
+
+        videoPlayerRef.current?.captureStream();
+        await video.requestPictureInPicture();
         setIsPiP(true);
       }
     } catch (err) {
       console.error('PiP failed:', err);
+      alert('Picture-in-Picture mode is not supported in your browser or requires HTTPS');
     }
   };
 

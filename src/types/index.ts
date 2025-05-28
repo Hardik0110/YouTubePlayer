@@ -39,6 +39,8 @@ export interface VideoPlayerRef {
   unMute(): void;            // Unmute audio
   isMuted(): boolean;        // Check if audio is muted
   getIframe(): HTMLIFrameElement | null;
+  getPipVideo(): HTMLVideoElement | null;
+  captureStream(): HTMLVideoElement | null;
 }
 
 export interface PlayerProps {

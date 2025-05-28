@@ -6,6 +6,7 @@ const NowPlaying = forwardRef(
   ({ currentVideo, onPlayerReady }: NowPlayingProps, ref: Ref<VideoPlayerRef>) => {
     const playerRef = useRef<YouTubePlayer | null>(null);
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
+    const pipVideoRef = useRef<HTMLVideoElement>(null); 
 
     useImperativeHandle(ref, () => ({
       get player() {
@@ -47,6 +48,19 @@ const NowPlaying = forwardRef(
       },
       getIframe() {
         return iframeRef.current;
+      },
+      getPipVideo() {
+        return pipVideoRef.current;
+      },
+      captureStream() {
+        const iframe = playerRef.current?.getIframe();
+        if (!iframe || !pipVideoRef.current) return null;
+        
+        const stream = iframe.contentDocument?.body.captureStream();
+        if (stream) {
+          pipVideoRef.current.srcObject = stream;
+        }
+        return pipVideoRef.current;
       }
     }));
 
@@ -94,6 +108,12 @@ const NowPlaying = forwardRef(
             }}
             onReady={handleReady}
             // onStateChange={handleStateChange}
+          />
+          <video 
+            ref={pipVideoRef}
+            className="hidden"
+            playsInline
+            muted
           />
         </div>
         <div className="mt-4 text-center">
