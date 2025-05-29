@@ -7,6 +7,7 @@ import {
   Volume2,
   VolumeX,
   Music,
+  Subtitles, // Change this line from ClosedCaptioning to Subtitles
 } from 'lucide-react';
 import usePlayerStore from '../stores/usePlayerStore';
 import { PlayerProps } from '../types';
@@ -23,11 +24,13 @@ const Player: React.FC<PlayerProps> = ({
     duration,
     volume,
     isMuted,
+    showCaptions,
     setIsPlaying,
     setCurrentTime,
     setDuration,
     setVolume,
     setIsMuted,
+    setShowCaptions,
   } = usePlayerStore();
 
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -82,7 +85,7 @@ const Player: React.FC<PlayerProps> = ({
   const format = (sec: number) => {
     if (isNaN(sec) || sec < 0) return '0:00';
     const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60).toString()
+    const s = Math.floor(sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
@@ -96,6 +99,10 @@ const Player: React.FC<PlayerProps> = ({
     } catch (error) {
       console.error('Error toggling play state:', error);
     }
+  };
+
+  const toggleCaptions = () => {
+    setShowCaptions(!showCaptions);
   };
 
   const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,6 +202,15 @@ const Player: React.FC<PlayerProps> = ({
               </button>
             </div>
             <div className="flex items-center">
+              <button
+                onClick={toggleCaptions}
+                className={`p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro ${
+                  showCaptions ? 'bg-accent text-white' : 'bg-white text-black'
+                }`}
+                title="Toggle captions"
+              >
+                <Subtitles className="w-5 h-5" /> {/* Change this line */}
+              </button>
               <button
                 onClick={toggleMute}
                 className="bg-white p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro"

@@ -194,3 +194,148 @@ export interface VideoLibraryProps {
   onSelectVideo: (video: VideoItem) => void;
   onAddToQueue: (video: VideoItem) => void;
 }
+
+export interface VideoItem {
+  id: string;
+  title: string;
+  channelTitle: string;
+  thumbnail: string;
+  thumbnailHigh: string;
+  duration: string;
+  viewCount: string;
+  startTime: number;
+  endTime: number;
+}
+
+export interface VideoPlayerRef {
+  setVolume: (volume: number) => void;
+  mute: () => void;
+  unMute: () => void;
+  togglePlay: () => void;
+  seekTo: (time: number) => void;
+  getCurrentTime: () => number;
+  isPlaying: () => boolean;
+}
+
+export interface PlayerProps {
+  currentVideo: VideoItem | null;
+  onPrevVideo: () => void;
+  onNextVideo: () => void;
+  videoPlayerRef: React.RefObject<VideoPlayerRef>;
+}
+
+// Caption related types
+export interface CaptionSegment {
+  start: number;
+  duration: number;
+  text: string;
+}
+
+export interface CaptionSnippet {
+  videoId: string;
+  lastUpdated: string;
+  trackKind: string;
+  language: string;
+  name: string;
+  audioTrackType?: string;
+  isCC?: boolean;
+  isLarge?: boolean;
+  isEasyReader?: boolean;
+  isDraft?: boolean;
+  isAutoSynced?: boolean;
+  status?: string;
+}
+
+export interface CaptionItem {
+  kind: string;
+  etag: string;
+  id: string;
+  snippet: CaptionSnippet;
+}
+
+export interface CaptionsResponse {
+  kind: string;
+  etag: string;
+  items: CaptionItem[];
+}
+
+// YouTube API response types
+export interface SearchResponse {
+  kind: string;
+  etag: string;
+  nextPageToken?: string;
+  regionCode: string;
+  pageInfo: {
+    totalResults: number;
+    resultsPerPage: number;
+  };
+  items: {
+    kind: string;
+    etag: string;
+    id: {
+      kind: string;
+      videoId: string;
+    };
+    snippet: {
+      publishedAt: string;
+      channelId: string;
+      title: string;
+      description: string;
+      thumbnails: {
+        [key: string]: {
+          url: string;
+          width: number;
+          height: number;
+        };
+      };
+      channelTitle: string;
+      liveBroadcastContent: string;
+      publishTime: string;
+    };
+  }[];
+}
+
+export interface VideoDetailResponse {
+  kind: string;
+  etag: string;
+  nextPageToken?: string;
+  items: {
+    kind: string;
+    etag: string;
+    id: string;
+    snippet: {
+      publishedAt: string;
+      channelId: string;
+      title: string;
+      description: string;
+      thumbnails: {
+        [key: string]: {
+          url: string;
+          width: number;
+          height: number;
+        };
+      };
+      channelTitle: string;
+      categoryId: string;
+      liveBroadcastContent: string;
+      localized: {
+        title: string;
+        description: string;
+      };
+    };
+    contentDetails: {
+      duration: string;
+      dimension: string;
+      definition: string;
+      caption: string;
+      licensedContent: boolean;
+      projection: string;
+    };
+    statistics: {
+      viewCount: string;
+      likeCount: string;
+      favoriteCount: string;
+      commentCount: string;
+    };
+  }[];
+}

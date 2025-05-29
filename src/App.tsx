@@ -9,8 +9,10 @@ import Player from './components/Player';
 import ErrorFallback from './components/ErrorFallback';
 import CategoryBar from './components/CategoryBar';
 import QueueList from './components/QueueList';
+import LyricsSection from './components/LyricsSection';
 
 import useStore from './stores/store';
+import usePlayerStore from './stores/usePlayerStore';
 import { VideoPlayerRef } from './types';
 import { useVideoSearch } from './hooks/useVideoSearch';
 
@@ -38,6 +40,9 @@ function App(): JSX.Element {
     playNextVideo,
     playPrevVideo,
   } = useStore();
+
+  // Player store state
+  const { showCaptions } = usePlayerStore();
 
   // Custom hook for video search logic
   const {
@@ -84,12 +89,16 @@ function App(): JSX.Element {
             </div>
 
             <div className="w-full lg:w-1/3">
-              <QueueList
-                queueVideos={queueVideos}
-                currentVideo={currentVideo}
-                onSelectVideo={selectVideo}
-                onRemoveFromQueue={removeFromQueue}
-              />
+              {showCaptions ? (
+                <LyricsSection currentVideo={currentVideo} />
+              ) : (
+                <QueueList
+                  queueVideos={queueVideos}
+                  currentVideo={currentVideo}
+                  onSelectVideo={selectVideo}
+                  onRemoveFromQueue={removeFromQueue}
+                />
+              )}
             </div>
           </main>
 
