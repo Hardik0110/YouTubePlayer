@@ -49,7 +49,7 @@ export interface PlayerProps {
 }
 
 export interface NowPlayingProps {
-  currentVideo: VideoItem | null; // Currently playing video
+  currentVideo: VideoItem | null;           // Currently playing video
   onPlayerReady(event: YouTubeEvent): void; // Called when player is ready
 }
 
@@ -99,8 +99,8 @@ export interface VideoDetailItem {
   kind: string;              // Resource type identifier
   etag: string;              // ETag for caching purposes
   id: string;                // Unique video ID
-  snippet: VideoSnippet;
-  contentDetails: {
+  snippet: VideoSnippet;     // Video metadata
+  contentDetails: {     
     duration: string;        // Video duration in ISO 8601 format (PT1H2M3S)
     dimension: string;       // Video dimension (2d, 3d)
     definition: string;      // Video quality (hd, sd)
@@ -137,4 +137,60 @@ interface Thumbnail {
   url: string;               // URL to the thumbnail image
   width: number;             // Width of the thumbnail in pixels
   height: number;            // Height of the thumbnail in pixels
+}
+
+export interface AppState {
+  videos: VideoItem[];
+  queueVideos: VideoItem[];
+  currentVideo: VideoItem | null;
+  isLoading: boolean;
+  searchTerm: string;
+  error: string | null;
+  activeCategory: string | null;
+  lastVideoRef: ((node: HTMLDivElement | null) => void) | null;
+
+  setVideos: (videos: VideoItem[]) => void;
+  setQueueVideos: (queueVideos: VideoItem[]) => void;
+  setCurrentVideo: (video: VideoItem | null) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setSearchTerm: (searchTerm: string) => void;
+  setError: (error: string | null) => void;
+  setActiveCategory: (category: string | null) => void;
+  setLastVideoRef: (ref: ((node: HTMLDivElement | null) => void) | null) => void;
+
+  handleSearch: (query: string) => Promise<void>;
+  handleCategorySelect: (category: string) => Promise<void>;
+
+  selectVideo: (video: VideoItem) => void;
+  addToQueue: (video: VideoItem) => void;
+  removeFromQueue: (videoId: string) => void;
+  playNextVideo: () => void;
+  playPrevVideo: () => void;
+}
+
+export interface PlayerState {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  isMuted: boolean;
+  isVideoMode: boolean;
+  setIsPlaying: (isPlaying: boolean) => void;
+  setCurrentTime: (currentTime: number) => void;
+  setDuration: (duration: number) => void;
+  setVolume: (volume: number) => void;
+  setIsMuted: (isMuted: boolean) => void;
+  setVideoMode: (isVideoMode: boolean) => void;
+}
+
+
+export interface VideoLibraryProps {
+  currentVideo: VideoItem | null;
+  searchTerm: string;
+  searchResults: VideoItem[];
+  categoryVideos: VideoItem[];
+  activeCategory: string | null;
+  isLoading: boolean;
+  onSelectVideo: (video: VideoItem) => void;
+  onAddToQueue: (video: VideoItem) => void;
 }

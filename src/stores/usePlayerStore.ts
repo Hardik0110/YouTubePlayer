@@ -1,19 +1,5 @@
 import { create } from 'zustand';
-
-interface PlayerState {
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  isMuted: boolean;
-  isVideoMode: boolean;
-  setIsPlaying: (isPlaying: boolean) => void;
-  setCurrentTime: (currentTime: number) => void;
-  setDuration: (duration: number) => void;
-  setVolume: (volume: number) => void;
-  setIsMuted: (isMuted: boolean) => void;
-  setVideoMode: (isVideoMode: boolean) => void;
-}
+import { PlayerState } from '../types/index';
 
 const usePlayerStore = create<PlayerState>((set) => ({
   isPlaying: false,
@@ -22,6 +8,8 @@ const usePlayerStore = create<PlayerState>((set) => ({
   volume: 80,
   isMuted: false,
   isVideoMode: true,
+  currentVideo: null,
+  queue: [],
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (currentTime) => set({ currentTime }),
   setDuration: (duration) => set({ duration }),

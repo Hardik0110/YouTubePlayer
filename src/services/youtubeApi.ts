@@ -1,145 +1,111 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
-import { SearchResponse, VideoDetailResponse, VideoItem } from '../types';
+import axios, { AxiosInstance } from 'axios';
+import {
+  SearchResponse,
+  VideoDetailResponse,
+  VideoItem,
+} from '../types/index';
 
-const API_KEY = 'AIzaSyAHWqMYjoeWtPO6TDnjHagPJ2nbe_x7KiI';
+const API_KEY = 'AIzaSyAHWqMYjoeWtPO6TDnjHagPJ2nbe_x7KiI'
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
+const REQUEST_TIMEOUT = 10_000;
 
-// API request timeout in milliseconds
-const REQUEST_TIMEOUT = 10000;
-
-// Create axios instance with common configuration
 const youtubeApi: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   timeout: REQUEST_TIMEOUT,
   params: { key: API_KEY },
 });
 
-// Error handler for API requests
-const handleApiError = (error: unknown): never => {
+function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError;
-    if (axiosError.response) {
+    if (error.response) {
       throw new Error(
-        `YouTube API Error: ${axiosError.response.status} - ${JSON.stringify(
-          axiosError.response.data
+        `YouTube API Error ${error.response.status}: ${JSON.stringify(
+          error.response.data
         )}`
       );
-    } else if (axiosError.request) {
-      throw new Error('Network error: No response received from YouTube API');
     }
-    throw new Error(`Request setup error: ${axiosError.message}`);
+    if (error.request) {
+      throw new Error('Network error: no response from YouTube API');
+    }
+    throw new Error(`Request setup error: ${error.message}`);
   }
   throw new Error(`Unexpected error: ${String(error)}`);
-};
+}
 
-// Convert ISO 8601 duration to seconds
-const parseDurationToSeconds = (duration: string): number => {
-  const match: RegExpMatchArray | null = duration.match(
-    /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/
-  );
-  if (!match) return 0;
+function parseIsoDuration(src: string): number {
+  const m = src.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const [h = '0', min = '0', s = '0'] = m?.slice(1) ?? [];
+  return +h * 3600 + +min * 60 + +s;
+}
 
-  const hours: number = parseInt(match[1] || '0', 10);
-  const minutes: number = parseInt(match[2] || '0', 10);
-  const seconds: number = parseInt(match[3] || '0', 10);
-  return hours * 3600 + minutes * 60 + seconds;
-};
+export function formatDuration(iso: string): string {
+  const total = parseIsoDuration(iso);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60)
+    .toString()
+    .padStart(h > 0 ? 2 : 1, '0');
+  const s = (total % 60).toString().padStart(2, '0');
+  return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+}
 
-// Format duration for display
-export const formatDuration = (duration: string): string => {
-  const totalSeconds: number = parseDurationToSeconds(duration);
-  const hours: number = Math.floor(totalSeconds / 3600);
-  const minutes: number = Math.floor((totalSeconds % 3600) / 60);
-  const seconds: number = totalSeconds % 60;
+export function formatViewCount(countStr: string): string {
+  const n = parseInt(countStr, 10);
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M views`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K views`;
+  return `${n} views`;
+}
 
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds
-      .toString()
-      .padStart(2, '0')}`;
-  }
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
-
-// Format view count for display
-export const formatViewCount = (viewCount: string): string => {
-  const count: number = parseInt(viewCount, 10);
-  if (count >= 1_000_000) {
-    return `${(count / 1_000_000).toFixed(1)}M views`;
-  }
-  if (count >= 1_000) {
-    return `${(count / 1_000).toFixed(1)}K views`;
-  }
-  return `${count} views`;
-};
-
-// Search videos
-export const searchVideos = async (
-  query: string
-): Promise<VideoItem[] | undefined> => {
-  if (!query.trim()) {
-    return [];
-  }
-
+export async function searchVideos(query: string): Promise<VideoItem[]> {
+  if (!query.trim()) return [];
   try {
-    const searchResponse = await youtubeApi.get<SearchResponse>('/search', {
+    const { data: sr } = await youtubeApi.get<SearchResponse>('/search', {
       params: {
         part: 'snippet',
-        maxResults: 10,
         q: query,
         type: 'video',
         order: 'viewCount',
+        maxResults: 10,
       },
     });
 
-    const items = searchResponse.data.items || [];
-    if (items.length === 0) {
-      return [];
-    }
+    const ids = sr.items
+      .map((i) => i.id.videoId)
+      .filter((v): v is string => Boolean(v));
+    if (ids.length === 0) return [];
 
-    const videoIds: string[] = items
-      .filter(item => item.id?.videoId)
-      .map(item => item.id.videoId as string);
+    const { data: dr } = await youtubeApi.get<VideoDetailResponse>('/videos', {
+      params: {
+        part: 'snippet,contentDetails,statistics',
+        id: ids.join(','),
+      },
+    });
 
-    if (videoIds.length === 0) {
-      return [];
-    }
+    return dr.items.map((item) => {
+      const dur = item.contentDetails.duration;
+      const seconds = parseIsoDuration(dur);
+      const thumbMed = item.snippet.thumbnails.medium?.url ?? '';
+      const thumbHigh =
+        item.snippet.thumbnails.maxres?.url ??
+        item.snippet.thumbnails.high?.url ??
+        thumbMed;
 
-    const detailsResponse = await youtubeApi.get<VideoDetailResponse>(
-      '/videos',
-      {
-        params: {
-          part: 'contentDetails,statistics,snippet',
-          id: videoIds.join(','),
-        },
-      }
-    );
-
-    const detailItems = detailsResponse.data.items || [];
-    if (detailItems.length === 0) {
-      return [];
-    }
-
-    return detailItems.map(item => ({
-      id: item.id,
-      title: item.snippet.title || 'Untitled Video',
-      channelTitle: item.snippet.channelTitle || 'Unknown Channel',
-      thumbnail: item.snippet.thumbnails.medium?.url || '',
-      thumbnailHigh:
-        item.snippet.thumbnails.maxres?.url ||
-        item.snippet.thumbnails.high?.url ||
-        item.snippet.thumbnails.medium?.url ||
-        '',
-      duration: formatDuration(item.contentDetails.duration || 'PT0S'),
-      viewCount: formatViewCount(item.statistics.viewCount || '0'),
-      startTime: 0,
-      endTime: parseDurationToSeconds(item.contentDetails.duration || 'PT0S'),
-    }));
-  } catch (error: unknown) {
-    handleApiError(error);
+      return {
+        id: item.id,
+        title: item.snippet.title,
+        channelTitle: item.snippet.channelTitle,
+        thumbnail: thumbMed,
+        thumbnailHigh: thumbHigh,
+        duration: formatDuration(dur),
+        viewCount: formatViewCount(item.statistics.viewCount),
+        startTime: 0,
+        endTime: seconds,
+      };
+    });
+  } catch (err) {
+    handleApiError(err);
   }
-};
+}
 
-// Params and result types for trending
 export interface TrendingParams {
   pageParam?: string;
 }
@@ -149,58 +115,45 @@ export interface TrendingResult {
   nextPageToken?: string;
 }
 
-// Get trending videos with pagination
-export const getTrendingVideos = async (
-  params: TrendingParams
-): Promise<TrendingResult> => {
+export async function getTrendingVideos(
+  { pageParam }: TrendingParams = {}
+): Promise<TrendingResult> {
   try {
-    const response = await youtubeApi.get<VideoDetailResponse>(
-      '/videos',
-      {
-        params: {
-          part: 'snippet,contentDetails,statistics',
-          chart: 'mostPopular',
-          maxResults: 20,
-          pageToken: params.pageParam,
-          regionCode: 'IN',
-        },
-      }
-    );
+    const { data } = await youtubeApi.get<VideoDetailResponse>('/videos', {
+      params: {
+        part: 'snippet,contentDetails,statistics',
+        chart: 'mostPopular',
+        regionCode: 'IN',
+        maxResults: 20,
+        pageToken: pageParam,
+      },
+    });
 
-    const items = response.data.items || [];
-    const videos: VideoItem[] = items.map(item => {
-      const durationString: string = item.contentDetails.duration || 'PT0S';
-      const viewCountString: string = item.statistics.viewCount || '0';
-      const durationInSeconds: number = parseDurationToSeconds(
-        durationString
-      );
-      const thumbnailUrl: string =
-        item.snippet.thumbnails.high?.url ||
-        item.snippet.thumbnails.medium?.url ||
-        item.snippet.thumbnails.default?.url ||
-        '';
+    const videos = data.items.map((item) => {
+      const dur = item.contentDetails.duration;
+      const seconds = parseIsoDuration(dur);
+      const thumbDef = item.snippet.thumbnails.default?.url ?? '';
+      const thumbHigh =
+        item.snippet.thumbnails.maxres?.url ??
+        item.snippet.thumbnails.high?.url ??
+        thumbDef;
 
       return {
         id: item.id,
-        title: item.snippet.title || 'Untitled Video',
-        channelTitle: item.snippet.channelTitle || 'Unknown Channel',
-        thumbnail: thumbnailUrl,
-        thumbnailHigh: item.snippet.thumbnails.maxres?.url || 
-                      item.snippet.thumbnails.high?.url || 
-                      thumbnailUrl,
-        duration: formatDuration(durationString),
-        viewCount: formatViewCount(viewCountString),
+        title: item.snippet.title,
+        channelTitle: item.snippet.channelTitle,
+        thumbnail: thumbDef,
+        thumbnailHigh: thumbHigh,
+        duration: formatDuration(dur),
+        viewCount: formatViewCount(item.statistics.viewCount),
         startTime: 0,
-        endTime: durationInSeconds,
+        endTime: seconds,
       };
     });
 
-    return {
-      videos,
-      nextPageToken: response.data.nextPageToken,
-    };
-  } catch (error: unknown) {
-    console.error('Error fetching trending videos:', error);
-    return { videos: [] };
+    return { videos, nextPageToken: data.nextPageToken };
+  } catch (err) {
+    console.error('Trending fetch error:', err);
+    return { videos: [], nextPageToken: undefined };
   }
-};
+}

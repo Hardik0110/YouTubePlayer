@@ -11,7 +11,6 @@ const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
     const [isPlayerReady, setIsPlayerReady] = useState(false);
     const { isVideoMode, setVideoMode } = usePlayerStore();
 
-    // Player API methods
     useImperativeHandle(ref, () => ({
       get player() {
         return playerRef.current;

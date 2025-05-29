@@ -13,7 +13,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       onSearch(searchQuery);
-      setSearchQuery(''); // Clears the search input after submission
+      setSearchQuery(''); 
     }
   };
 

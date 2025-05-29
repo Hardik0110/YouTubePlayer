@@ -4,18 +4,7 @@ import { useTrendingVideos } from '../hooks/useTrendingVideos';
 import { useVideoDisplay } from '../hooks/useVideoDisplay';
 import VideoGrid from './VideoGrid';
 import LoadingSpinner from './ui/LoadingSpinner';
-import { VideoItem as VideoItemType } from '../types';
-
-interface VideoLibraryProps {
-  currentVideo: VideoItemType | null;
-  searchTerm: string;
-  searchResults: VideoItemType[];
-  categoryVideos: VideoItemType[];
-  activeCategory: string | null;
-  isLoading: boolean;
-  onSelectVideo: (video: VideoItemType) => void;
-  onAddToQueue: (video: VideoItemType) => void;
-}
+import { VideoLibraryProps } from '../types';
 
 const VideoLibrary: React.FC<VideoLibraryProps> = ({
   currentVideo,
@@ -27,23 +16,14 @@ const VideoLibrary: React.FC<VideoLibraryProps> = ({
   onSelectVideo,
   onAddToQueue,
 }) => {
-  const { 
-    data: trendingData,
-    isLoading: trendingLoading,
-    error 
-  } = useTrendingVideos();
+  const { data: trendingData, isLoading: trendingLoading, error } = useTrendingVideos();
 
-  const {
-    videos,
-    headerText,
-    shouldShowInfiniteScroll,
-    isEmpty
-  } = useVideoDisplay({
+  const { videos, headerText, shouldShowInfiniteScroll, isEmpty } = useVideoDisplay({
     searchTerm,
     searchResults,
     categoryVideos,
     activeCategory,
-    trendingData
+    trendingData,
   });
 
   if (error) {

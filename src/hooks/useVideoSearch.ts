@@ -36,7 +36,7 @@ export const useVideoSearch = () => {
       setIsLoading(true);
       storeSetIsLoading(true);
       
-      // Clear category when searching
+      // It Clears category when searching
       setActiveCategory(null);
       setCategoryVideos([]);
       
@@ -46,7 +46,6 @@ export const useVideoSearch = () => {
         setVideos(results);
       }
       
-      // Update store search term
       storeHandleSearch(term);
     } catch (error) {
       console.error('Error searching videos:', error);
