@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, memo } from 'react';
 import { PlusCircle } from 'lucide-react';
 import VideoItem from './VideoItem';
 import { VideoItem as VideoItemType } from '../types';
@@ -12,7 +12,7 @@ interface VideoGridProps {
   shouldShowInfiniteScroll: boolean;
 }
 
-const VideoGrid: React.FC<VideoGridProps> = ({
+const VideoGrid: React.FC<VideoGridProps> = memo(({
   videos,
   currentVideo,
   onSelectVideo,
@@ -24,7 +24,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({
 
   // Filter out invalid videos
   const validVideos = videos.filter((video): video is VideoItemType => 
-    video !== undefined && video !== null && typeof video.id === 'string'
+    Boolean(video?.id && typeof video.id === 'string')
   );
 
   const lastVideoRef = useCallback((node: HTMLDivElement | null) => {
@@ -34,37 +34,47 @@ const VideoGrid: React.FC<VideoGridProps> = ({
       observer.current.disconnect();
     }
 
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasNextPage) {
-        fetchNextPage();
+    observer.current = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1,
       }
-    });
+    );
 
     if (node) {
       observer.current.observe(node);
     }
   }, [fetchNextPage, hasNextPage, isFetching, shouldShowInfiniteScroll]);
 
-  const renderVideoItem = (video: VideoItemType, index: number) => {
-    if (!video || !video.id) return null;
+  const handleAddToQueue = useCallback((e: React.MouseEvent, video: VideoItemType) => {
+    e.stopPropagation();
+    onAddToQueue(video);
+  }, [onAddToQueue]);
+
+  const renderVideoItem = useCallback((video: VideoItemType, index: number) => {
+    const isLastItem = index === validVideos.length - 1;
+    const isActive = currentVideo?.id === video.id;
     
     return (
       <div
         key={video.id}
-        ref={index === validVideos.length - 1 && shouldShowInfiniteScroll ? lastVideoRef : undefined}
-        className="mb-4 relative group"
+        ref={isLastItem && shouldShowInfiniteScroll ? lastVideoRef : undefined}
+        className="relative group"
       >
         <VideoItem
           video={video}
           onSelect={onSelectVideo}
-          isActive={currentVideo?.id === video.id}
+          isActive={isActive}
         />
         <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddToQueue(video);
-          }}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-accent p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => handleAddToQueue(e, video)}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           title="Add to queue"
           aria-label={`Add ${video.title} to queue`}
         >
@@ -72,13 +82,23 @@ const VideoGrid: React.FC<VideoGridProps> = ({
         </button>
       </div>
     );
-  };
+  }, [currentVideo?.id, lastVideoRef, onSelectVideo, shouldShowInfiniteScroll, validVideos.length, handleAddToQueue]);
+
+  if (validVideos.length === 0) {
+    return (
+      <div className="text-center text-textColor py-8 font-vt323">
+        No videos available
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="space-y-4">
       {validVideos.map(renderVideoItem)}
     </div>
   );
-};
+});
+
+VideoGrid.displayName = 'VideoGrid';
 
 export default VideoGrid;

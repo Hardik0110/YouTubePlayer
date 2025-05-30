@@ -7,7 +7,9 @@ import {
   Volume2,
   VolumeX,
   Music,
-  Subtitles, // Change this line from ClosedCaptioning to Subtitles
+  Subtitles,
+  Monitor,
+  Music2,
 } from 'lucide-react';
 import usePlayerStore from '../stores/usePlayerStore';
 import { PlayerProps } from '../types';
@@ -25,12 +27,14 @@ const Player: React.FC<PlayerProps> = ({
     volume,
     isMuted,
     showCaptions,
+    isVideoMode,
     setIsPlaying,
     setCurrentTime,
     setDuration,
     setVolume,
     setIsMuted,
     setShowCaptions,
+    setVideoMode,
   } = usePlayerStore();
 
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -103,6 +107,10 @@ const Player: React.FC<PlayerProps> = ({
 
   const toggleCaptions = () => {
     setShowCaptions(!showCaptions);
+  };
+
+  const toggleVideoMode = () => {
+    setVideoMode(!isVideoMode);
   };
 
   const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -178,7 +186,7 @@ const Player: React.FC<PlayerProps> = ({
             <span>{format(currentTime)}</span>
             <span>{format(currentVideo.endTime)}</span>
           </div>
-              
+
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button
@@ -201,6 +209,7 @@ const Player: React.FC<PlayerProps> = ({
                 <SkipForward className="w-5 h-5" />
               </button>
             </div>
+
             <div className="flex items-center">
               <button
                 onClick={toggleCaptions}
@@ -209,7 +218,20 @@ const Player: React.FC<PlayerProps> = ({
                 }`}
                 title="Toggle captions"
               >
-                <Subtitles className="w-5 h-5" /> {/* Change this line */}
+                <Subtitles className="w-5 h-5" />
+              </button>
+              <button
+                onClick={toggleVideoMode}
+                className={`
+                  p-2 rounded-full mr-2 transition hover:bg-opacity-80 active:translate-y-1 shadow-retro
+                  ${isVideoMode 
+                    ? 'bg-accent text-white' 
+                    : 'bg-white text-accent border-2 border-accent'
+                  }
+                `}
+                title={isVideoMode ? 'Switch to audio mode' : 'Switch to video mode'}
+              >
+                {isVideoMode ? <Monitor size={20} /> : <Music2 size={20} />}
               </button>
               <button
                 onClick={toggleMute}

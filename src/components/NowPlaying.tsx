@@ -1,7 +1,6 @@
-import { useImperativeHandle, forwardRef,  useRef, useState } from 'react';
+import { useImperativeHandle, forwardRef, useRef, useState } from 'react';
 import YouTube, { YouTubePlayer, YouTubeEvent } from 'react-youtube';
 import { VideoPlayerRef, NowPlayingProps } from '../types';
-import { Monitor, Music2 } from 'lucide-react';
 import usePlayerStore from '../stores/usePlayerStore';
 
 const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
@@ -9,7 +8,7 @@ const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
     const playerRef = useRef<YouTubePlayer | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isPlayerReady, setIsPlayerReady] = useState(false);
-    const { isVideoMode, setVideoMode } = usePlayerStore();
+    const { isVideoMode } = usePlayerStore();
 
     useImperativeHandle(ref, () => ({
       get player() {
@@ -59,8 +58,6 @@ const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
       onPlayerReady(event);
     };
 
-    const toggleVideoMode = () => setVideoMode(!isVideoMode);
-
     // YouTube player options
     const youtubeOpts = {
       height: '100%',
@@ -74,37 +71,12 @@ const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
     };
 
     return (
-      <div className="p-4 h-full flex flex-col" ref={containerRef}>
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-press-start text-lg text-primary">
-            Now Playing
-          </h2>
-          
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-white">Choose Mode Here - </span>
-            <button
-              onClick={toggleVideoMode}
-              className={`
-                p-2 rounded-full transition-all duration-200 hover:scale-105
-                ${isVideoMode 
-                  ? 'bg-accent text-white shadow-lg' 
-                  : 'bg-white text-accent border-2 border-accent'
-                }
-              `}
-              title={isVideoMode ? 'Switch to audio mode' : 'Switch to video mode'}
-              aria-label={isVideoMode ? 'Switch to audio mode' : 'Switch to video mode'}
-            > 
-              {isVideoMode ? <Monitor size={20} /> : <Music2 size={20} />}
-            </button>
-          </div>
-        </div>
-
+      <div className="relative h-full" ref={containerRef}>
         {/* Player Section */}
-        <div className="flex-grow relative w-full border-4 border-primary shadow-retro-lg rounded-lg overflow-hidden bg-white">
+        <div className="w-full h-full">
           {/* Video Mode */}
           {isVideoMode && (
-            <div className="absolute inset-0">
+            <div className="w-full h-full">
               <YouTube
                 videoId={currentVideo?.id}
                 className="w-full h-full"
@@ -127,10 +99,6 @@ const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg" />
                   </div>
-                  
-                  <div className="animate-pulse-slow">
-                    <Music2 className="w-8 h-8 text-accent" />
-                  </div>
                 </>
               )}
               
@@ -148,8 +116,8 @@ const NowPlaying = forwardRef<VideoPlayerRef, NowPlayingProps>(
 
         {/* Track Info Section */}
         {currentVideo && (
-          <div className="mt-4 text-center space-y-1">
-            <h3 className="font-vt323 text-2xl text-accent font-bold line-clamp-2">
+          <div className="absolute bottom-0 left-0 right-0 p-4 text-center space-y-1 bg-gradient-to-t from-black/80 to-transparent">
+            <h3 className="font-vt323 text-2xl text-white font-bold line-clamp-2">
               {currentVideo.title}
             </h3>
             <p className="font-vt323 text-lg text-primary">

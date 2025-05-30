@@ -1,8 +1,15 @@
 import { create } from 'zustand';
 import { searchVideos } from '../services/youtubeApi';
-import { AppState } from '../types/index';
+import { AppState, VideoItem } from '../types/index';
 
-const useStore = create<AppState>((set, get) => ({
+interface StoreState extends AppState {
+  // Additional store-specific state
+  isQueueEmpty: boolean;
+  canPlayPrevious: boolean;
+}
+
+const useStore = create<StoreState>((set, get) => ({
+  // Initial state
   videos: [],
   queueVideos: [],
   currentVideo: null,
@@ -11,78 +18,152 @@ const useStore = create<AppState>((set, get) => ({
   error: null,
   activeCategory: null,
   lastVideoRef: null,
+  isQueueEmpty: true,
+  canPlayPrevious: false,
 
-  setVideos: (videos) => set({ videos }),
-  setQueueVideos: (queueVideos) => set({ queueVideos }),
-  setCurrentVideo: (video) => set({ currentVideo: video }),
-  setIsLoading: (isLoading) => set({ isLoading }),
-  setSearchTerm: (searchTerm) => set({ searchTerm }),
-  setError: (error) => set({ error }),
-  setActiveCategory: (category) => set({ activeCategory: category }),
-  setLastVideoRef: (ref) => set({ lastVideoRef: ref }),
+  // State setters
+  setVideos: (videos: VideoItem[]) => set({ videos }),
+  setQueueVideos: (queueVideos: VideoItem[]) => set({ 
+    queueVideos,
+    isQueueEmpty: queueVideos.length === 0 
+  }),
+  setCurrentVideo: (video: VideoItem | null) => set({ currentVideo: video }),
+  setIsLoading: (isLoading: boolean) => set({ isLoading }),
+  setSearchTerm: (searchTerm: string) => set({ searchTerm }),
+  setError: (error: string | null) => set({ error }),
+  setActiveCategory: (category: string | null) => set({ activeCategory: category }),
+  setLastVideoRef: (ref: ((node: HTMLDivElement | null) => void) | null) => set({ lastVideoRef: ref }),
 
-  handleSearch: async (query) => {
-    if (!query.trim()) return;
-    set({ searchTerm: query, activeCategory: null, isLoading: true, error: null });
+  // Search handlers
+  handleSearch: async (query: string) => {
+    if (!query.trim()) {
+      set({ error: 'Please enter a search term' });
+      return;
+    }
+
+    set({ 
+      searchTerm: query, 
+      activeCategory: null, 
+      isLoading: true, 
+      error: null 
+    });
+
     try {
       const results = await searchVideos(query);
-      set({
-        videos: results ?? [],
-        error: !results || results.length === 0 ? 'No videos found for your search. Try different keywords.' : null,
+      
+      if (!results || results.length === 0) {
+        set({ 
+          videos: [], 
+          error: 'No videos found for your search. Try different keywords.' 
+        });
+        return;
+      }
+
+      set({ 
+        videos: results,
+        error: null
       });
-    } catch {
-      set({ error: 'Failed to load videos. Please try again later.', videos: [] });
+    } catch (error) {
+      console.error('Search error:', error);
+      set({ 
+        error: 'Failed to load videos. Please try again later.', 
+        videos: [] 
+      });
     } finally {
       set({ isLoading: false });
     }
   },
 
-  handleCategorySelect: async (category) => {
-    set({ activeCategory: category, searchTerm: category, isLoading: true, error: null });
+  handleCategorySelect: async (category: string) => {
+    set({ 
+      activeCategory: category, 
+      searchTerm: category, 
+      isLoading: true, 
+      error: null 
+    });
+
     try {
       const results = await searchVideos(category);
-      set({
-        videos: results ?? [],
-        error: !results || results.length === 0 ? `No ${category} videos found. Try a different category.` : null,
+      
+      if (!results || results.length === 0) {
+        set({ 
+          videos: [], 
+          error: `No ${category} videos found. Try a different category.` 
+        });
+        return;
+      }
+
+      set({ 
+        videos: results,
+        error: null
       });
-    } catch {
-      set({ error: 'Failed to load videos. Please try again later.', videos: [] });
+    } catch (error) {
+      console.error('Category search error:', error);
+      set({ 
+        error: 'Failed to load videos. Please try again later.', 
+        videos: [] 
+      });
     } finally {
       set({ isLoading: false });
     }
   },
 
-  selectVideo: (video) => set({ currentVideo: video }),
+  // Video selection and queue management
+  selectVideo: (video: VideoItem) => {
+    const state = get();
+    set({ 
+      currentVideo: video,
+      canPlayPrevious: state.videos.findIndex(v => v.id === video.id) > 0
+    });
+  },
 
-  addToQueue: (video) =>
-    set((state) => ({
-      queueVideos: state.queueVideos.some((v) => v.id === video.id)
-        ? state.queueVideos
-        : [...state.queueVideos, video],
-    })),
+  addToQueue: (video: VideoItem) => {
+    set((state) => {
+      const isAlreadyInQueue = state.queueVideos.some((v) => v.id === video.id);
+      if (isAlreadyInQueue) return state;
 
-  removeFromQueue: (videoId) =>
-    set((state) => ({
-      queueVideos: state.queueVideos.filter((video) => video.id !== videoId),
-    })),
+      const newQueue = [...state.queueVideos, video];
+      return {
+        queueVideos: newQueue,
+        isQueueEmpty: false
+      };
+    });
+  },
 
+  removeFromQueue: (videoId: string) => {
+    set((state) => {
+      const newQueue = state.queueVideos.filter((video) => video.id !== videoId);
+      return {
+        queueVideos: newQueue,
+        isQueueEmpty: newQueue.length === 0
+      };
+    });
+  },
+
+  // Playback control
   playNextVideo: () => {
     const state = get();
-    if (state.queueVideos.length === 0) return;
-    const nextVideo = state.queueVideos[0];
+    if (state.isQueueEmpty) return;
+
+    const [nextVideo, ...remainingQueue] = state.queueVideos;
     set({
       currentVideo: nextVideo,
-      queueVideos: state.queueVideos.slice(1),
+      queueVideos: remainingQueue,
+      isQueueEmpty: remainingQueue.length === 0
     });
   },
 
   playPrevVideo: () => {
     const state = get();
-    const { currentVideo, videos } = state;
-    if (!currentVideo) return;
-    const idx = videos.findIndex((v) => v.id === currentVideo.id);
-    if (idx <= 0) return;
-    set({ currentVideo: videos[idx - 1] });
+    if (!state.currentVideo || !state.canPlayPrevious) return;
+
+    const currentIndex = state.videos.findIndex((v) => v.id === state.currentVideo?.id);
+    if (currentIndex <= 0) return;
+
+    set({ 
+      currentVideo: state.videos[currentIndex - 1],
+      canPlayPrevious: currentIndex > 1
+    });
   },
 }));
 

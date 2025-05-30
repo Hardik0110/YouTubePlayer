@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { VideoItem as VideoItemType } from '../types';
 
 interface VideoItemProps {
@@ -7,14 +7,25 @@ interface VideoItemProps {
   isActive: boolean;
 }
 
-const VideoItem: React.FC<VideoItemProps> = ({ video, onSelect, isActive }) => {
-  const handleClick = () => {
+const VideoItem: React.FC<VideoItemProps> = memo(({ video, onSelect, isActive }) => {
+  const handleClick = useCallback(() => {
     onSelect(video);
-  };
+  }, [onSelect, video]);
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect(video);
+    }
+  }, [onSelect, video]);
 
   return (
     <div 
       onClick={handleClick}
+      onKeyPress={handleKeyPress}
+      role="button"
+      tabIndex={0}
+      aria-selected={isActive}
       className={`
         p-3 mb-3 rounded-md cursor-pointer transition-all duration-300
         ${isActive 
@@ -29,6 +40,7 @@ const VideoItem: React.FC<VideoItemProps> = ({ video, onSelect, isActive }) => {
             src={video.thumbnail} 
             alt={video.title} 
             className="w-full h-full object-cover"
+            loading="lazy"
           />
           <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 px-1 font-vt323 text-white text-sm">
             {video.duration}
@@ -48,6 +60,8 @@ const VideoItem: React.FC<VideoItemProps> = ({ video, onSelect, isActive }) => {
       </div>
     </div>
   );
-};
+});
+
+VideoItem.displayName = 'VideoItem';
 
 export default VideoItem;
