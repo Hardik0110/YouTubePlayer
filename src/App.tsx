@@ -16,7 +16,6 @@ import usePlayerStore from './stores/usePlayerStore';
 import { VideoPlayerRef } from './types';
 import { useVideoSearch } from './hooks/useVideoSearch';
 
-// Configure React Query client with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -75,7 +74,6 @@ const App: React.FC = () => {
       <ErrorBoundary 
         FallbackComponent={ErrorFallback}
         onReset={() => {
-          // Reset the state of your app here
           window.location.reload();
         }}
       >

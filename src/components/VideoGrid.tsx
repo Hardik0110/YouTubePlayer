@@ -22,7 +22,7 @@ const VideoGrid: React.FC<VideoGridProps> = memo(({
   const observer = useRef<IntersectionObserver | null>(null);
   const { fetchNextPage, hasNextPage, isFetching } = useTrendingVideos();
 
-  // Filter out invalid videos
+  // Filtering out invalid videos
   const validVideos = videos.filter((video): video is VideoItemType => 
     Boolean(video?.id && typeof video.id === 'string')
   );

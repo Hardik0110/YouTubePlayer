@@ -22,7 +22,7 @@ const LyricsSection: React.FC<LyricsSectionProps> = ({ currentVideo }) => {
       try {
         const { artist, title } = extractArtistAndTitle(currentVideo.title);
         const lyricsText = await getLyrics(artist, title);
-        // Clean up lyrics by removing special characters and empty lines
+        // Cleaning up lyrics by removing special characters and empty lines
         const cleanedLyrics = lyricsText
           .replace(/[^\w\s\n]/g, '') // Remove special characters except newlines
           .split('\n')
